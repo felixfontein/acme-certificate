@@ -1,0 +1,6 @@
+---
+- name: server setup
+  hosts: webserver
+  roles:
+    - { role: letsencrypt, domains: ['example.com', 'www.example.com'], server_location: '/var/www/challenges/', acme_account: 'keys/letsencrypt-account.key', acme_email: 'mail@example.com' }
+    - { role: letsencrypt, domains: ['another.example.com'],            server_location: '/var/www/challenges/', acme_account: 'keys/letsencrypt-account.key', acme_email: 'mail@example.com' }

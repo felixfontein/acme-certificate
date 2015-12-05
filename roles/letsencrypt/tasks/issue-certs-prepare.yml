@@ -1,0 +1,12 @@
+---
+- name: "Preparing scratch folder (1/2)"
+  local_action: shell mkdir -p scratch/challenges-{{ domains[0] }}
+  run_once: True
+
+- name: "Preparing scratch folder (2/2)"
+  local_action: shell chmod -R og-rwx scratch/challenges-{{ domains[0] }}
+  run_once: True
+
+- name: "Preparing challenges for domains {{ ', '.join(domains) }}"
+  local_action: shell python roles/letsencrypt/code/acme_compact.py get-certificate-part-1 --account-key "{{ acme_account }}" --email "{{ acme_email }}" --csr "keys/{{ domains[0] }}.csr" --statefile "scratch/state-{{ domains[0] }}.json" --acme-dir "scratch/challenges-{{ domains[0] }}"
+  run_once: True

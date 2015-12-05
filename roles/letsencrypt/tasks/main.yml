@@ -1,0 +1,8 @@
+---
+- include: create-keys.yml               tags=issue-tls-certs-newkey,create-tls-keys
+- include: create-csrs.yml               tags=issue-tls-certs-newkey,create-tls-keys,create-tls-csr
+- include: issue-certs-prepare.yml       tags=issue-tls-certs-newkey,issue-tls-certs
+- include: issue-certs-copy.yml          tags=issue-tls-certs-newkey,issue-tls-certs
+- include: issue-certs-finish.yml        tags=issue-tls-certs-newkey,issue-tls-certs
+- include: issue-certs-cleanup-local.yml tags=issue-tls-certs-newkey,issue-tls-certs,tls-cleanup
+- include: issue-certs-cleanup.yml       tags=issue-tls-certs-newkey,issue-tls-certs,tls-cleanup

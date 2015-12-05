@@ -1,0 +1,4 @@
+---
+- name: "Creating private key for domains {{ ', '.join(domains) }}"
+  local_action: shell python roles/letsencrypt/code/acme_compact.py gen-key --key "keys/{{ domains[0] }}.key"
+  run_once: True

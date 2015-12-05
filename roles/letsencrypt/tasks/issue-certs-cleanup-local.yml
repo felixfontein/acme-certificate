@@ -1,0 +1,4 @@
+---
+- name: "Cleaning up state and challenge files"
+  local_action: shell rm -rf "scratch/state-{{ domains[0] }}.json" "scratch/challenges-{{ domains[0] }}"
+  run_once: True
