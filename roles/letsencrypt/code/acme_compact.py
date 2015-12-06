@@ -232,4 +232,5 @@ if __name__ == "__main__":
                         sys.stderr.write("Warning: option '{0}' is ignored for this command.\n".format(opt))
             cmd['command'](**values)
     except Exception as e:
-        print(e)
+        sys.stderr.write("Error occured: {0}".format(str(e)))
+        sys.exit(-2)
