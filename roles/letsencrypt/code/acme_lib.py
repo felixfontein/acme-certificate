@@ -27,8 +27,8 @@ except ImportError:  # Python 2
 
 
 default_ca = "https://acme-v01.api.letsencrypt.org"
+default_intermediate_url = "https://letsencrypt.org/certs/lets-encrypt-x1-cross-signed.pem"
 ca_agreement = "https://letsencrypt.org/documents/LE-SA-v1.0.1-July-27-2015.pdf"
-
 
 # #####################################################################################################
 # # Helper functions
@@ -282,6 +282,18 @@ def retrieve_certificate(csr, header, CA, account_key):
     if code != 201:
         raise ValueError("Error signing certificate: {0} {1}".format(code, result))
     return """-----BEGIN CERTIFICATE-----\n{0}\n-----END CERTIFICATE-----\n""".format("\n".join(textwrap.wrap(base64.b64encode(result).decode('utf8'), 64)))
+
+
+def get_intermediate_certificate(intermediate_url=default_intermediate_url):
+    """Retrieve the intermediate certificate from the CA server."""
+    import ssl
+    try:
+        resp = urlopen(intermediate_url)
+        if resp.getcode() != 200:
+            raise ValueError("Cannot retrieve certificate (status code {0}; message: {1})".format(resp.getcode(), resp.read()))
+        return resp.read().decode('utf-8').strip()
+    except IOError as e:
+        raise ValueError("Cannot retrieve certificate ({0})".format(str(e)))
 
 
 # #####################################################################################################
