@@ -1,8 +1,8 @@
 ---
-- include: create-keys.yml               tags=issue-tls-certs-newkey,create-tls-keys
-- include: create-csrs.yml               tags=issue-tls-certs-newkey,create-tls-keys,create-tls-csr
-- include: issue-certs-prepare.yml       tags=issue-tls-certs-newkey,issue-tls-certs
-- include: issue-certs-copy.yml          tags=issue-tls-certs-newkey,issue-tls-certs
-- include: issue-certs-finish.yml        tags=issue-tls-certs-newkey,issue-tls-certs
-- include: issue-certs-cleanup-local.yml tags=issue-tls-certs-newkey,issue-tls-certs,tls-cleanup
-- include: issue-certs-cleanup.yml       tags=issue-tls-certs-newkey,issue-tls-certs,tls-cleanup
+- include: create-keys.yml               tags=issue-tls-certs-newkey,issue-tls-certs-newkey-{{ domains[0] }},create-tls-keys,create-tls-keys-{{ domains[0] }}
+- include: create-csrs.yml               tags=issue-tls-certs-newkey,issue-tls-certs-newkey-{{ domains[0] }},create-tls-keys,create-tls-keys-{{ domains[0] }},create-tls-csr,create-tls-csr-{{ domains[0] }}
+- include: issue-certs-prepare.yml       tags=issue-tls-certs-newkey,issue-tls-certs-newkey-{{ domains[0] }},issue-tls-certs,issue-tls-certs-{{ domains[0] }}
+- include: issue-certs-copy.yml          tags=issue-tls-certs-newkey,issue-tls-certs-newkey-{{ domains[0] }},issue-tls-certs,issue-tls-certs-{{ domains[0] }}
+- include: issue-certs-finish.yml        tags=issue-tls-certs-newkey,issue-tls-certs-newkey-{{ domains[0] }},issue-tls-certs,issue-tls-certs-{{ domains[0] }}
+- include: issue-certs-cleanup-local.yml tags=issue-tls-certs-newkey,issue-tls-certs-newkey-{{ domains[0] }},issue-tls-certs,issue-tls-certs-{{ domains[0] }},tls-cleanup,tls-cleanup-{{ domains[0] }}
+- include: issue-certs-cleanup.yml       tags=issue-tls-certs-newkey,issue-tls-certs-newkey-{{ domains[0] }},issue-tls-certs,issue-tls-certs-{{ domains[0] }},tls-cleanup,tls-cleanup-{{ domains[0] }}
