@@ -35,6 +35,15 @@ command line tool `openssl` in the path. Please note that this project is not we
 tested and audited, so please check the code intensively before using this in a
 production environment!
 
+## Account key conversion
+
+Note that this Ansible role expects the Let's Encrypt account key to be in PEM format
+and not in JWK format, which is used by the
+[official Let's Encrypt client](https://github.com/letsencrypt/letsencrypt). If you
+have created an account key with the official client and now want to use this key with
+this ansible role, you have to convert it. One tool which can do this is
+[pem-jwk](https://github.com/dannycoates/pem-jwk).
+
 ## Integrate this role to your server's playbook
 
 In this section I'm assuming you use nginx. Similar setups can be made for other
