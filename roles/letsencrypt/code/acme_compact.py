@@ -31,8 +31,17 @@ def _print_csr(csr):
     sys.stdout.write(acme_lib.get_csr_as_text(csr) + '\n')
 
 
+def _get_root(root_url, cert):
+    ic = acme_lib.download_certificate(root_url)
+    if cert is None:
+        sys.stdout.write(ic + '\n')
+    else:
+        acme_lib.write_file(cert, ic + '\n')
+        sys.stderr.write("Stored root certificate at '{0}'.\n".format(cert))
+
+
 def _get_intermediate(intermediate_url, cert):
-    ic = acme_lib.get_intermediate_certificate(intermediate_url)
+    ic = acme_lib.download_certificate(intermediate_url)
     if cert is None:
         sys.stdout.write(ic + '\n')
     else:
@@ -158,6 +167,12 @@ if __name__ == "__main__":
                 'optional': [],
                 'command': _print_csr,
             },
+            'get-root': {
+                'help': 'Retrieves the root certificate from the CA server and prints it to stdout (if --cert is not specified).',
+                'requires': [],
+                'optional': ["root_url", "cert"],
+                'command': _get_root,
+            },
             'get-intermediate': {
                 'help': 'Retrieves the intermediate certificate from the CA server and prints it to stdout (if --cert is not specified).',
                 'requires': [],
@@ -195,6 +210,7 @@ if __name__ == "__main__":
         parser.add_argument("--cert", required=False, help="file name to store certificate into (otherwise it is printed on stdout)")
         parser.add_argument("--email", required=False, help="email address (will be associated with account)")
         parser.add_argument("--intermediate-url", required=False, default=acme_lib.default_intermediate_url, help="URL for the intermediate certificate (default: {0})".format(acme_lib.default_intermediate_url))
+        parser.add_argument("--root-url", required=False, default=acme_lib.default_root_url, help="URL for the root certificate (default: {0})".format(acme_lib.default_root_url))
 
         args = parser.parse_args()
         if args.command is None:

@@ -1,4 +1,0 @@
----
-- name: "Get intermediate certificate for domains {{ ', '.join(domains) }}"
-  local_action: shell python roles/letsencrypt/code/acme_compact.py get-intermediate --cert "keys/{{ domains[0] }}-chain.pem"
-  run_once: True
