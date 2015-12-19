@@ -30,7 +30,7 @@ server's specific situation:
 
 Please see these files for further instructions and example content.
 
-This code should work with Python 2 (untested) and Python 3, and requires OpenSSL's
+This code should work with Python 2 and Python 3, and requires OpenSSL's
 command line tool `openssl` in the path. Please note that this project is not well
 tested and audited, so please check the code intensively before using this in a
 production environment!
@@ -103,3 +103,84 @@ With this config, if `/var/www/challenges/` is empty, your HTTP server will beha
 With this config, you can run `ansible-playbook sample-playbook.yml -t issue-tls-certs` or
 `ansible-playbook sample-playbook.yml -t issue-tls-certs-newkey` without any config change,
 and you will be issued new or renewed TLS/SSL certificates.
+
+## Using the generated files for webserver configuration
+
+Let's assume you created TLS keys for `www.example.com`. You have to copy the relevant files
+to your webserver. The ansible role created the following files:
+
+  * `keys/www.example.com.key`: this is the private key for the certificate. Ensure nobody can
+    access it.
+  * `keys/www.example.com.pem`: this is the certificate itself.
+  * `keys/www.example.com-chain.pem`: this is the intermediate certificate(s) needed for a trust
+    path.
+  * `keys/www.example.com.cnf`: this is an OpenSSL configuration file used to create the
+    Certificate Signing Request. You can safely delete it.
+  * `keys/www.example.com.csr`: this is the Certificate Signing Request used to obtain the
+    certificate. You can safely delete it.
+  * `keys/www.example.com-fullchain.pem`: this is the certificate combined with the intermediate
+    certificate(s).
+  * `keys/www.example.com-rootchain.pem`: this is the intermediate certificate(s) combined with
+    the root certificate. You might need this for OCSP stapling.
+  * `keys/www.example.com-root.pem`: this is the root certificate of Let's Encrypt.
+
+For configuring your webserver, you need the private key (`keys/www.example.com.key`), and
+either the certificate with intermediate certificate(s) combined in one file
+(`keys/www.example.com-fullchain.pem`), or the certificate and the intermediate certificate(s)
+as two separate files (`keys/www.example.com.pem` and `keys/www.example.com-chain.pem`). If you
+want to use [OCSP stapling](https://en.wikipedia.org/wiki/OCSP_stapling), you will also need
+`keys/www.example.com-rootchain.pem`.
+
+To get these files onto your web server, you should extend your ansible role for configuring
+the webserver to copy them. This could be done as follows:
+
+    - name: copy private keys
+      copy: src=keys/{{ item }} dest=/etc/ssl/private/ owner=root group=root mode=0400
+      with_items:
+      - www.example.com.key
+      notify: reload webserver
+
+    - name: copy certificates
+      copy: src=keys/{{ item }} dest=/etc/ssl/server-certs/ owner=root group=root mode=0444
+      with_items:
+      - www.example.com-rootchain.pem
+      - www.example.com-fullchain.pem
+      - www.example.com.pem
+      notify: reload webserver
+
+The webserver configuration could look as follows (for nginx):
+
+    server {
+        listen www.example.com:443 ssl;
+        listen [::]:443 ssl;
+        server_name www.example.com;
+        
+        ssl_protocols TLSv1.2 TLSv1;
+        ssl_prefer_server_ciphers on;
+        ssl_ciphers "-ALL !ADH !aNULL !EXP !EXPORT40 !EXPORT56 !RC4 !3DES !eNULL !NULL !DES !MD5 !LOW ECDHE-ECDSA-AES256-GCM-SHA384 ECDHE-RSA-AES256-GCM-SHA384 DHE-RSA-AES256-GCM-SHA384 ECDHE-ECDSA-AES256-SHA384 ECDHE-RSA-AES256-SHA384 DHE-RSA-AES256-SHA256 ECDHE-ECDSA-AES256-SHA ECDHE-RSA-AES256-SHA DHE-RSA-AES256-SHA";
+        
+        ssl_certificate /etc/ssl/server-certs/www.example.com-fullchain.pem;
+        ssl_certificate_key /etc/ssl/private/www.example.com.key;
+        
+        resolver 8.8.8.8 8.8.4.4 valid=300s; # using Google DNS servers; add your hoster's
+        resolver_timeout 10s;
+        
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        ssl_trusted_certificate /etc/ssl/server-certs/www.example.com-rootchain.pem;
+        
+        ssl_session_cache shared:SSL:50m;
+        ssl_session_timeout 5m;
+        
+        charset utf-8;
+        
+        access_log  /var/log/nginx/www.example.com.log combined;
+        error_log  /var/log/nginx/www.example.com.log error;
+        
+        add_header Strict-Transport-Security "max-age=3155760000;";
+        
+        location / {
+            root   /var/www/www.example.com;
+            index  index.html;
+        }
+    }
