@@ -186,8 +186,7 @@ The webserver configuration could look as follows (for nginx):
         ssl_stapling_verify on;
         ssl_trusted_certificate /etc/ssl/server-certs/www.example.com-rootchain.pem;
         
-        # Enables a SSL session ticket cache. Adjust the numbers depending on your
-        # site's usage.
+        # Enables a SSL session cache. Adjust the numbers depending on your site's usage.
         ssl_session_cache shared:SSL:50m;
         ssl_session_timeout 5m;
         
