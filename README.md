@@ -100,8 +100,8 @@ With this config, if `/var/www/challenges/` is empty, your HTTP server will beha
 `/.well-known/acme-challenge/` location isn't specified.
 
 
-With this config, you can run `ansible-playbook sample-playbook.yml -t issue-tls-certs` or
-`ansible-playbook sample-playbook.yml -t issue-tls-certs-newkey` without any config change,
+If you have such a config, you can run `ansible-playbook sample-playbook.yml -t issue-tls-certs`
+or `ansible-playbook sample-playbook.yml -t issue-tls-certs-newkey` without any config change,
 and you will be issued new or renewed TLS/SSL certificates.
 
 ## Using the generated files for webserver configuration
@@ -151,33 +151,54 @@ the webserver to copy them. This could be done as follows:
 The webserver configuration could look as follows (for nginx):
 
     server {
-        listen www.example.com:443 ssl;
-        listen [::]:443 ssl;
+        listen www.example.com:443 ssl;  # IPv4: listen to IP www.example.com points to
+        listen [::]:443 ssl;             # IPv6: listen to localhost
         server_name www.example.com;
         
+        # Allowing only TLS 1.0 and 1.2, with a very selective amount of ciphers.
+        # According to SSL Lab's SSL server test, this will block:
+        #   - Android 2.3.7
+        #   - IE 6 and 8 under Windows XP
+        #   - Java 6, 7 and 8
+        # If that's not acceptable for you, choose other cipher lists. Look for
+        # example at https://wiki.mozilla.org/Security/Server_Side_TLS
         ssl_protocols TLSv1.2 TLSv1;
         ssl_prefer_server_ciphers on;
         ssl_ciphers "-ALL !ADH !aNULL !EXP !EXPORT40 !EXPORT56 !RC4 !3DES !eNULL !NULL !DES !MD5 !LOW ECDHE-ECDSA-AES256-GCM-SHA384 ECDHE-RSA-AES256-GCM-SHA384 DHE-RSA-AES256-GCM-SHA384 ECDHE-ECDSA-AES256-SHA384 ECDHE-RSA-AES256-SHA384 DHE-RSA-AES256-SHA256 ECDHE-ECDSA-AES256-SHA ECDHE-RSA-AES256-SHA DHE-RSA-AES256-SHA";
         
+        # The certificate chain sent to the browser, as well as the private key.
+        # Make sure your private key is only accessible by the webserver during
+        # configuration loading (which by default is done with user root).
         ssl_certificate /etc/ssl/server-certs/www.example.com-fullchain.pem;
         ssl_certificate_key /etc/ssl/private/www.example.com.key;
         
-        resolver 8.8.8.8 8.8.4.4 valid=300s; # using Google DNS servers; add your hoster's
+        # For OCSP stapling, we need a DNS resolver. Here only Google DNS servers
+        # are specified; I would prepent them by your hoster's DNS servers.
+        # You can usually find their IPs in /etc/resolv.conf on your webserver.
+        resolver 8.8.8.8 8.8.4.4 valid=300s;
         resolver_timeout 10s;
         
+        # Enabling OCSP stapling. Nginx will take care of retrieving the OCSP data
+        # automatically. See https://wiki.mozilla.org/Security/Server_Side_TLS#OCSP_Stapling
+        # for details on OCSP stapling.
         ssl_stapling on;
         ssl_stapling_verify on;
         ssl_trusted_certificate /etc/ssl/server-certs/www.example.com-rootchain.pem;
         
+        # Enables a SSL session ticket cache. Adjust the numbers depending on your
+        # site's usage.
         ssl_session_cache shared:SSL:50m;
         ssl_session_timeout 5m;
+        
+        # You should only use HSTS with proper certificates; the ones from Let's Encrypt
+        # are fine for this, self-signed ones are not. See MozillaWiki for more details:
+        # https://wiki.mozilla.org/Security/Server_Side_TLS#HSTS:_HTTP_Strict_Transport_Security
+        add_header Strict-Transport-Security "max-age=3155760000;";
         
         charset utf-8;
         
         access_log  /var/log/nginx/www.example.com.log combined;
         error_log  /var/log/nginx/www.example.com.log error;
-        
-        add_header Strict-Transport-Security "max-age=3155760000;";
         
         location / {
             root   /var/www/www.example.com;
