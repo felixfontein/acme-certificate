@@ -19,8 +19,9 @@ and command line interface, which is based on Daniel Roesler's
 
 See `sample-playbook.yml` for how to use this role. Please note that it assumes an
 account key has already been created (and is available at `keys/letsencrypt-account.key`).
-To create such a key, run `python roles/letsencrypt/code/acme_compact.py gen-account-key
---account-key keys/letsencrypt-account.key`.
+To create such a key, run
+
+    python roles/letsencrypt/code/acme_compact.py gen-account-key --account-key keys/letsencrypt-account.key
 
 Note that before you can use this role, you *must* adjust the following files to your
 server's specific situation:
