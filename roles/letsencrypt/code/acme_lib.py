@@ -27,7 +27,7 @@ except ImportError:  # Python 2
 
 
 default_ca = "https://acme-v01.api.letsencrypt.org"
-default_intermediate_url = "https://letsencrypt.org/certs/lets-encrypt-x1-cross-signed.pem"
+default_intermediate_url = "https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem"
 default_root_url = "https://letsencrypt.org/certs/isrgrootx1.pem"
 ca_agreement = "https://letsencrypt.org/documents/LE-SA-v1.0.1-July-27-2015.pdf"
 
@@ -165,7 +165,7 @@ def parse_csr(csr):
         for san in subject_alt_names.group(1).split(", "):
             if san.startswith("DNS:"):
                 domains.add(san[4:])
-    return domains
+    return sorted(domains)
 
 
 def register_account(header, CA, account_key, email_address=None, telephone=None):
