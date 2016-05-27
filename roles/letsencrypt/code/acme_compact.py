@@ -7,13 +7,13 @@ import sys
 import textwrap
 
 
-def _gen_account_key(account_key, key_length):
-    key = acme_lib.create_key(key_length=key_length)
+def _gen_account_key(account_key, key_length, algorithm):
+    key = acme_lib.create_key(key_length=key_length, algorithm=algorithm)
     acme_lib.write_file(account_key, key)
 
 
-def _gen_cert_key(key, key_length):
-    the_key = acme_lib.create_key(key_length=key_length)
+def _gen_cert_key(key, key_length, algorithm):
+    the_key = acme_lib.create_key(key_length=key_length, algorithm=algorithm)
     acme_lib.write_file(key, the_key)
 
 
@@ -70,7 +70,7 @@ def _get_certificate(account_key, csr, acme_dir, CA, cert, email):
             acme_lib.write_file(cert, result)
             sys.stderr.write("Stored certificate at '{0}'.\n".format(cert))
     finally:
-        acme_lib.remove_challenges(state)
+        acme_lib.remove_challenges(state, acme_dir)
 
 
 def _get_certificate_part1(statefile, account_key, csr, acme_dir, CA, email):
@@ -116,7 +116,7 @@ if __name__ == "__main__":
                 Let's Encrypt using the ACME protocol. It can both be run from the server
                 and from another machine (when splitting the process up in two steps).
                 The script needs to have access to your private account key, so PLEASE READ
-                THROUGH IT! It's only ~210+400 lines (including docstrings), so it won't
+                THROUGH IT! It's only ~255+510 lines (including docstrings), so it won't
                 take too long.
 
                 ===Example Usage: Creating Letsencrypt account key, private key for certificate and CSR===
@@ -125,6 +125,9 @@ if __name__ == "__main__":
                 python acme_compact.py gen-csr --key /path/to/domain.key --csr /path/to/domain.csr --domains example.com,www.example.com
                 ===================
                 Note that the email address does not have to be specified.
+
+                Also note that by default, RSA keys are generated. If you want ECC keys,
+                please specify "--algorithm <alg>" with <alg> being "p-256" or "p-384".
 
                 ===Example Usage: Creating certifiate from CSR on server===
                 python acme_compact.py get-certificate --account-key /path/to/account.key --email mail@example.com --csr /path/to/domain.csr --acme-dir /usr/share/nginx/html/.well-known/acme-challenge/ --cert /path/to/signed.crt 2>> /var/log/acme_compact.log
@@ -146,17 +149,17 @@ if __name__ == "__main__":
             'gen-account-key': {
                 'help': 'Generates an account key.',
                 'requires': ["account_key"],
-                'optional': ["key_length"],
+                'optional': ["key_length", "algorithm"],
                 'command': _gen_account_key,
             },
             'gen-key': {
                 'help': 'Generates a certificate key.',
                 'requires': ["key"],
-                'optional': ["key_length"],
+                'optional': ["key_length", "algorithm"],
                 'command': _gen_cert_key,
             },
             'gen-csr': {
-                'help': 'Generates a certificate signing request (CSR).',
+                'help': 'Generates a certificate signing request (CSR). Under *nix, use /dev/stdin after --key to provide key via stdin.',
                 'requires': ["domains", "key", "csr"],
                 'optional': [],
                 'command': _gen_csr,
@@ -200,6 +203,7 @@ if __name__ == "__main__":
         }
         parser.add_argument("command", type=str, nargs='?', help="must be one of {0}".format(', '.join('"{0}"'.format(command) for command in sorted(commands.keys()))))
         parser.add_argument("--account-key", required=False, help="path to your Let's Encrypt account private key")
+        parser.add_argument("--algorithm", required=False, default="rsa", help="the algorithm to use (rsa, ...)")  # FIXME
         parser.add_argument("--key-length", type=int, default=4096, required=False, help="key length for private keys")
         parser.add_argument("--key", required=False, help="path to your certificate's private key")
         parser.add_argument("--csr", required=False, help="path to your certificate signing request")
@@ -248,5 +252,5 @@ if __name__ == "__main__":
                         sys.stderr.write("Warning: option '{0}' is ignored for this command.\n".format(opt))
             cmd['command'](**values)
     except Exception as e:
-        sys.stderr.write("Error occured: {0}".format(str(e)))
+        sys.stderr.write("Error occured: {0}\n".format(str(e)))
         sys.exit(-2)

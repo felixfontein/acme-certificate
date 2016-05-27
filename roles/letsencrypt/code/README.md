@@ -6,7 +6,7 @@ certificates for your server, by either running this script on your server or
 by running it somewhere else. It does needs access to your private Let's Encrypt
 account key. Please note that this code is somewhat experimental, so don't use
 this in production environments without checking the code first. Since there
-isn't too much code (around 610 lines, including docstrings and CLI help) this
+isn't too much code (around 765 lines, including docstrings and CLI help) this
 should be manageable.
 
 **PLEASE READ THE SOURCE CODE! YOU MUST TRUST IT WITH YOUR PRIVATE KEYS!**
@@ -28,5 +28,5 @@ This modularization comes at a cost: it increases the code size a bit. That's
 why I started a new project instead of simply forking (and starting a Pull
 Request for) the original project.
 
-This code should work with Python 2 (untested) and Python 3, and requires OpenSSL's
+This code should work with Python 2 and Python 3, and requires OpenSSL's
 command line tool `openssl` in the path.

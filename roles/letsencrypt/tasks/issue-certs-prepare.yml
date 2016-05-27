@@ -1,10 +1,6 @@
 ---
-- name: "Preparing scratch folder (1/2)"
-  local_action: shell mkdir -p scratch/challenges-{{ domains[0] }}
-  run_once: True
-
-- name: "Preparing scratch folder (2/2)"
-  local_action: shell chmod -R og-rwx scratch/challenges-{{ domains[0] }}
+- name: "Preparing scratch folder"
+  local_action: file state=directory mode=0700 path=scratch/challenges-{{ domains[0] }}
   run_once: True
 
 - name: "Preparing challenges for domains {{ ', '.join(domains) }}"
