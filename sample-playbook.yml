@@ -3,4 +3,5 @@
   hosts: webserver
   roles:
     - { role: letsencrypt, domains: ['example.com', 'www.example.com'], server_location: '/var/www/challenges/', acme_account: 'keys/letsencrypt-account.key', acme_email: 'mail@example.com' }
-    - { role: letsencrypt, domains: ['another.example.com'],            server_location: '/var/www/challenges/', acme_account: 'keys/letsencrypt-account.key', acme_email: 'mail@example.com' }
+    - { role: letsencrypt, domains: ['another.example.com'],            server_location: '/var/www/challenges/', acme_account: 'keys/letsencrypt-account.key', acme_email: 'mail@example.com', key_name: 'another.example.com-rsa', key_length: 4096 }
+    - { role: letsencrypt, domains: ['another.example.com'],            server_location: '/var/www/challenges/', acme_account: 'keys/letsencrypt-account.key', acme_email: 'mail@example.com', key_name: 'another.example.com-ecc', algorithm: 'p-256' }

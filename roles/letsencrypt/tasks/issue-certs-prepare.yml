@@ -1,8 +1,8 @@
 ---
 - name: "Preparing scratch folder"
-  local_action: file state=directory mode=0700 path=scratch/challenges-{{ domains[0] }}
+  local_action: file state=directory mode=0700 path=scratch/challenges-{{ key_name }}
   run_once: True
 
 - name: "Preparing challenges for domains {{ ', '.join(domains) }}"
-  local_action: shell python roles/letsencrypt/code/acme_compact.py get-certificate-part-1 --account-key "{{ acme_account }}" --email "{{ acme_email }}" --csr "keys/{{ domains[0] }}.csr" --statefile "scratch/state-{{ domains[0] }}.json" --acme-dir "scratch/challenges-{{ domains[0] }}"
+  local_action: shell python roles/letsencrypt/code/acme_compact.py get-certificate-part-1 --account-key "{{ acme_account }}" --email "{{ acme_email }}" --csr "keys/{{ key_name }}.csr" --statefile "scratch/state-{{ key_name }}.json" --acme-dir "scratch/challenges-{{ key_name }}"
   run_once: True

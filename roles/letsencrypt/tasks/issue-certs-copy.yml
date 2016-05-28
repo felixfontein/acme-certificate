@@ -1,7 +1,7 @@
 ---
 This script must be adjusted to your server configuration!
 
-"scratch/challenges-{{ domains[0] }}/" contains the challenge files, which have
+"scratch/challenges-{{ key_name }}/" contains the challenge files, which have
 to be provided by your web server under "http://{{ domain }}/.well-known/acme-challenge/".
 
 If you have a different folder on the server for every domain, use
@@ -13,4 +13,4 @@ to all servers does not hurt if the servers are properly configured.
 Example:
 
 - name: Copying challenge files for domains {{ ', '.join(domains) }}"
-  copy: src=scratch/challenges-{{ domains[0] }}/ dest={{ server_location }} owner=root group=http directory_mode=0750 mode=0640
+  copy: src=scratch/challenges-{{ key_name }}/ dest={{ server_location }} owner=root group=http directory_mode=0750 mode=0640

@@ -1,4 +1,4 @@
 ---
 - name: "Creating private key for domains {{ ', '.join(domains) }}"
-  local_action: shell python roles/letsencrypt/code/acme_compact.py gen-key --key "keys/{{ domains[0] }}.key" --algorithm {{ algorithm }} --key-length {{ key_length }}
+  local_action: shell python roles/letsencrypt/code/acme_compact.py gen-key --key "keys/{{ key_name }}.key" --algorithm {{ algorithm }} --key-length {{ key_length }}
   run_once: True

@@ -1,8 +1,8 @@
 ---
 - name: "Getting certificate for domains {{ ', '.join(domains) }}"
-  local_action: shell python roles/letsencrypt/code/acme_compact.py get-certificate-part-2 --csr "keys/{{ domains[0] }}.csr" --statefile "scratch/state-{{ domains[0] }}.json" --cert "keys/{{ domains[0] }}.pem"
+  local_action: shell python roles/letsencrypt/code/acme_compact.py get-certificate-part-2 --csr "keys/{{ key_name }}.csr" --statefile "scratch/state-{{ key_name }}.json" --cert "keys/{{ key_name }}.pem"
   run_once: True
 
 - name: "Creating chained certificate for domains {{ ', '.join(domains) }}"
-  local_action: shell cat "keys/{{ domains[0] }}.pem" "keys/{{ domains[0] }}-chain.pem" > "keys/{{ domains[0] }}-fullchain.pem"
+  local_action: shell cat "keys/{{ key_name }}.pem" "keys/{{ key_name }}-chain.pem" > "keys/{{ key_name }}-fullchain.pem"
   run_once: True
