@@ -3,5 +3,5 @@ This script must be adjusted to your server configuration!
 
 Example:
 
-- name: Cleaning up challenge files for domains {{ ', '.join(domains) }}"
+- name: "Cleaning up challenge files for domains {{ ', '.join(domains) }}"
   shell: rm -f {{ server_location }}*
