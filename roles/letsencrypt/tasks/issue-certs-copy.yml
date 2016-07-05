@@ -13,4 +13,4 @@ to all servers does not hurt if the servers are properly configured.
 Example:
 
 - name: Copying challenge files for domains {{ ', '.join(domains) }}"
-  copy: src={{ scratch_path }}challenges-{{ key_name }}/ dest={{ server_location }} owner=root group=http directory_mode=0750 mode=0640
+  copy: src={{ scratch_path }}challenges-{{ key_name }}/ dest={{ server_location }} directory_mode=0755 mode=0644
