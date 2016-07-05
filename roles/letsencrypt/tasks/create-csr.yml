@@ -1,4 +1,4 @@
 ---
 - name: "Creating CSR for domains {{ ', '.join(domains) }}"
-  local_action: shell python roles/letsencrypt/code/acme_compact.py gen-csr --key "keys/{{ key_name }}.key" --csr "keys/{{ key_name }}.csr" --domains "{{ ','.join(domains) }}"
+  local_action: shell python {{ role_path }}/code/acme_compact.py gen-csr --key "{{ keys_path }}{{ key_name }}.key" --csr "{{ keys_path }}{{ key_name }}.csr" --domains "{{ ','.join(domains) }}"
   run_once: True

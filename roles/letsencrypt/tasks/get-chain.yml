@@ -1,12 +1,12 @@
 ---
 - name: "Get root certificate for domains {{ ', '.join(domains) }}"
-  local_action: shell python roles/letsencrypt/code/acme_compact.py get-root --cert "keys/{{ key_name }}-root.pem"
+  local_action: shell python {{ role_path }}/code/acme_compact.py get-root --cert "{{ keys_path }}{{ key_name }}-root.pem"
   run_once: True
 
 - name: "Get intermediate certificate for domains {{ ', '.join(domains) }}"
-  local_action: shell python roles/letsencrypt/code/acme_compact.py get-intermediate --cert "keys/{{ key_name }}-chain.pem"
+  local_action: shell python {{ role_path }}/code/acme_compact.py get-intermediate --cert "{{ keys_path }}{{ key_name }}-chain.pem"
   run_once: True
 
 - name: "Form root chain for domains {{ ', '.join(domains) }}"
-  local_action: shell cat "keys/{{ key_name }}-root.pem" "keys/{{ key_name }}-chain.pem" > "keys/{{ key_name }}-rootchain.pem"
+  local_action: shell cat "{{ keys_path }}{{ key_name }}-root.pem" "{{ keys_path }}{{ key_name }}-chain.pem" > "{{ keys_path }}{{ key_name }}-rootchain.pem"
   run_once: True
