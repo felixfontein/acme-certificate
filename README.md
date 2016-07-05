@@ -23,6 +23,8 @@ To create such a key, run
 
     python roles/letsencrypt/code/acme_compact.py gen-account-key --account-key keys/letsencrypt-account.key
 
+(You can adjust the path `keys/` by setting the variable `keys_path`.)
+
 Note that before you can use this role, you *must* adjust the following files to your
 server's specific situation:
 
