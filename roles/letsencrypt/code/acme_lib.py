@@ -28,9 +28,11 @@ except ImportError:  # Python 2
 
 staging_ca = "https://acme-staging.api.letsencrypt.org"
 default_ca = "https://acme-v01.api.letsencrypt.org"
+default_ca_staging = "https://acme-staging.api.letsencrypt.org"
 default_intermediate_url = "https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem"
 default_root_url = "https://letsencrypt.org/certs/isrgrootx1.pem"
-ca_agreement = "https://letsencrypt.org/documents/LE-SA-v1.0.1-July-27-2015.pdf"
+ca_agreement = "https://letsencrypt.org/documents/LE-SA-v1.1.1-August-1-2016.pdf"
+ca_agreement_redirect_pattern = '{}/terms'
 
 # #####################################################################################################
 # # Helper functions
@@ -99,7 +101,7 @@ class ECC(Algorithm):
     def extract_point(self, pub_hex):
         if len(pub_hex) != 64:
             raise ValueError("Key error: public key has incorrect length")
-        return pub_hex[:self.bitlength//8], pub_hex[self.bitlength//8:]
+        return pub_hex[:self.bitlength // 8], pub_hex[self.bitlength // 8:]
 
 
 _ALGORITHMS = {
@@ -202,7 +204,7 @@ def parse_account_key(account_key):
         }
     else:
         pub_data = re.search(
-            r"pub:\s*\n\s+04:([a-f0-9\:\s]+?)\nASN1 OID: (\S+)\nNIST CURVE: (\S+)", out, re.MULTILINE|re.DOTALL)
+            r"pub:\s*\n\s+04:([a-f0-9\:\s]+?)\nASN1 OID: (\S+)\nNIST CURVE: (\S+)", out, re.MULTILINE | re.DOTALL)
         if pub_data is None:
             raise ValueError("Invalid or incompatible ECC key.")
         pub_hex = binascii.unhexlify(re.sub(r"(\s|:)", "", pub_data.group(1)))
@@ -250,7 +252,7 @@ def _send_signed_request(url, payload, header, CA, account_key_type, account_key
         resp = urlopen(url, data.encode('utf8'))
         return resp.getcode(), resp.read()
     except IOError as e:
-        return e.code, e.read()
+        return getattr(e, "code", None), getattr(e, "read", e.__str__)()
 
 
 def parse_csr(csr):
@@ -263,8 +265,7 @@ def parse_csr(csr):
     common_name = re.search(r"Subject:.*? CN=([^\s,;/]+)", out)
     if common_name is not None:
         domains.add(common_name.group(1))
-    subject_alt_names = re.search(r"X509v3 Subject Alternative Name: \n +([^\n]+)\n", out, re.MULTILINE | re.DOTALL)
-    if subject_alt_names is not None:
+    for subject_alt_names in re.finditer(r"X509v3 Subject Alternative Name: \n +([^\n]+)\n", out, re.MULTILINE | re.DOTALL):
         for san in subject_alt_names.group(1).split(", "):
             if san.startswith("DNS:"):
                 domains.add(san[4:])
@@ -277,9 +278,15 @@ def register_account(header, CA, account_key_type, account_key, email_address=No
     Return True if the account was created and False if it already exists.
     Raises an exception in case of errors.
     """
+    argreement = ca_agreement
+    try:
+        resp = urlopen(ca_agreement_redirect_pattern.format(CA))
+        argreement = resp.url
+    except IOError as e:
+        sys.stderr.write("Retrieving agreement failed: {0}\n".format(e.message))
     data = {
         "resource": "new-reg",
-        "agreement": ca_agreement,
+        "agreement": argreement,
     }
     contacts = []
     if email_address is not None:
@@ -390,7 +397,6 @@ def retrieve_certificate(csr, header, CA, account_key_type, account_key):
 
 def download_certificate(url):
     """Download a certificate (as a file) from the CA server."""
-    import ssl
     try:
         resp = urlopen(url)
         if resp.getcode() != 200:
