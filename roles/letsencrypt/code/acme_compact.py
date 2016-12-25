@@ -116,7 +116,7 @@ if __name__ == "__main__":
                 Let's Encrypt using the ACME protocol. It can both be run from the server
                 and from another machine (when splitting the process up in two steps).
                 The script needs to have access to your private account key, so PLEASE READ
-                THROUGH IT! It's only ~255+510 lines (including docstrings), so it won't
+                THROUGH IT! It's only ~265+520 lines (including docstrings), so it won't
                 take too long.
 
                 ===Example Usage: Creating Letsencrypt account key, private key for certificate and CSR===
@@ -208,7 +208,8 @@ if __name__ == "__main__":
         parser.add_argument("--key", required=False, help="path to your certificate's private key")
         parser.add_argument("--csr", required=False, help="path to your certificate signing request")
         parser.add_argument("--acme-dir", required=False, help="path to the .well-known/acme-challenge/ directory")
-        parser.add_argument("--CA", required=False, default=acme_lib.default_ca, help="CA to use (default: {0})".format(acme_lib.default_ca))
+        parser.add_argument("--CA", required=False, default=None, help="CA to use (default: {0})".format(acme_lib.default_ca))
+        parser.add_argument("--use-staging-CA", required=False, default=False, action='store_true', help="Use Let's Encrypt staging CA")
         parser.add_argument("--statefile", required=False, default=None, help="state file for two-part run")
         parser.add_argument("-d", "--domains", required=False, default=None, help="a comma-separated list of domain names")
         parser.add_argument("--cert", required=False, help="file name to store certificate into (otherwise it is printed on stdout)")
@@ -235,6 +236,11 @@ if __name__ == "__main__":
             cmd = commands[args.command]
             accepted = set()
             values = {}
+            if args.__dict__['use_staging_CA']:
+                if args.__dict__['CA'] is not None:
+                    sys.stderr.write("Cannot specify both '--use-staging-CA' and provide '--CA'!\n")
+                    sys.exit(-1)
+                args.__dict__['CA'] = acme_lib.staging_ca
             for req in cmd['requires']:
                 accepted.add(req)
                 if args.__dict__[req] is None:
@@ -250,6 +256,8 @@ if __name__ == "__main__":
                 if args.__dict__[opt] is not parser.get_default(opt):
                     if opt not in accepted:
                         sys.stderr.write("Warning: option '{0}' is ignored for this command.\n".format(opt))
+            if 'CA' in values and values['CA'] is None:
+                values['CA'] = acme_lib.default_ca
             cmd['command'](**values)
     except Exception as e:
         sys.stderr.write("Error occured: {0}\n".format(str(e)))

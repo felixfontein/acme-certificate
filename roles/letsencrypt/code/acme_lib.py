@@ -21,9 +21,9 @@ import sys
 import textwrap
 import time
 try:
-    from urllib.request import urlopen
+    from urllib.request import urlopen, Request
 except ImportError:  # Python 2
-    from urllib2 import urlopen
+    from urllib2 import urlopen, Request
 
 
 staging_ca = "https://acme-staging.api.letsencrypt.org"
@@ -33,6 +33,8 @@ default_intermediate_url = "https://letsencrypt.org/certs/lets-encrypt-x3-cross-
 default_root_url = "https://letsencrypt.org/certs/isrgrootx1.pem"
 ca_agreement = "https://letsencrypt.org/documents/LE-SA-v1.1.1-August-1-2016.pdf"
 ca_agreement_redirect_pattern = '{}/terms'
+
+user_agent = "acme-compact"
 
 # #####################################################################################################
 # # Helper functions
@@ -63,6 +65,10 @@ def _get_wellknown_path(domain, token, folder_for_domain):
     else:
         folder = folder_for_domain
     return os.path.join(folder, token)
+
+
+def _request(url):
+    return Request(url, headers={'User-Agent': user_agent})
 
 
 # #####################################################################################################
@@ -229,7 +235,7 @@ def parse_account_key(account_key):
 
 def _send_signed_request(url, payload, header, CA, account_key_type, account_key):
     """Helper function make signed requests."""
-    nonce = urlopen(CA + "/directory").headers['Replay-Nonce']
+    nonce = urlopen(_request(CA + "/directory")).headers['Replay-Nonce']
     payload64 = _b64(json.dumps(payload).encode('utf8'))
     protected = copy.deepcopy(header)
     protected.update({"nonce": nonce})
@@ -249,7 +255,7 @@ def _send_signed_request(url, payload, header, CA, account_key_type, account_key
         "signature": _b64(out),
     })
     try:
-        resp = urlopen(url, data.encode('utf8'))
+        resp = urlopen(_request(url), data.encode('utf8'))
         return resp.getcode(), resp.read()
     except IOError as e:
         return getattr(e, "code", None), getattr(e, "read", e.__str__)()
@@ -280,7 +286,7 @@ def register_account(header, CA, account_key_type, account_key, email_address=No
     """
     argreement = ca_agreement
     try:
-        resp = urlopen(ca_agreement_redirect_pattern.format(CA))
+        resp = urlopen(_request(ca_agreement_redirect_pattern.format(CA)))
         argreement = resp.url
     except IOError as e:
         sys.stderr.write("Retrieving agreement failed: {0}\n".format(e.message))
@@ -338,7 +344,7 @@ def check_challenge(domain, token, keyauthorization):
     # check that the file is in place
     wellknown_url = get_wellknown_url(domain, token)
     try:
-        resp = urlopen(wellknown_url)
+        resp = urlopen(_request(wellknown_url))
         return resp.read().decode('utf8').strip() == keyauthorization
     except IOError:
         return False
@@ -367,7 +373,7 @@ def check_challenge_verified(domain, challenge, wait=True):
     """
     while True:
         try:
-            resp = urlopen(challenge['uri'])
+            resp = urlopen(_request(challenge['uri']))
             challenge_status = json.loads(resp.read().decode('utf8'))
         except IOError as e:
             raise ValueError("Error checking challenge: {0} {1}".format(e.code, json.loads(e.read().decode('utf8'))))
@@ -398,7 +404,7 @@ def retrieve_certificate(csr, header, CA, account_key_type, account_key):
 def download_certificate(url):
     """Download a certificate (as a file) from the CA server."""
     try:
-        resp = urlopen(url)
+        resp = urlopen(_request(url))
         if resp.getcode() != 200:
             raise ValueError("Cannot retrieve certificate (status code {0}; message: {1})".format(resp.getcode(), resp.read()))
         return resp.read().decode('utf-8').strip()
