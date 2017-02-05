@@ -1,9 +1,38 @@
 ---
-- include: create-key.yml                tags=issue-tls-certs-newkey,issue-tls-certs-newkey-{{ key_name }},create-tls-keys,create-tls-keys-{{ key_name }}
-- include: create-csr.yml                tags=issue-tls-certs-newkey,issue-tls-certs-newkey-{{ key_name }},issue-tls-certs,issue-tls-certs-{{ key_name }},create-tls-keys,create-tls-keys-{{ key_name }},create-tls-csr,create-tls-csr-{{ key_name }}
-- include: get-chain.yml                 tags=issue-tls-certs-newkey,issue-tls-certs-newkey-{{ key_name }},issue-tls-certs,issue-tls-certs-{{ key_name }},get-tls-chain,get-tls-chain-{{ key_name }}
-- include: issue-certs-prepare.yml       tags=issue-tls-certs-newkey,issue-tls-certs-newkey-{{ key_name }},issue-tls-certs,issue-tls-certs-{{ key_name }}
-- include: issue-certs-copy.yml          tags=issue-tls-certs-newkey,issue-tls-certs-newkey-{{ key_name }},issue-tls-certs,issue-tls-certs-{{ key_name }}
-- include: issue-certs-finish.yml        tags=issue-tls-certs-newkey,issue-tls-certs-newkey-{{ key_name }},issue-tls-certs,issue-tls-certs-{{ key_name }}
-- include: issue-certs-cleanup-local.yml tags=issue-tls-certs-newkey,issue-tls-certs-newkey-{{ key_name }},issue-tls-certs,issue-tls-certs-{{ key_name }},tls-cleanup,tls-cleanup-{{ key_name }}
-- include: issue-certs-cleanup.yml       tags=issue-tls-certs-newkey,issue-tls-certs-newkey-{{ key_name }},issue-tls-certs,issue-tls-certs-{{ key_name }},tls-cleanup,tls-cleanup-{{ key_name }}
+- include: create-key.yml
+  tags:
+  - issue-tls-certs-newkey
+  - create-tls-keys
+- include: create-csr.yml
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
+  - create-tls-keys
+  - create-tls-csr
+- include: get-chain.yml
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
+  - get-tls-chain
+- include: issue-certs-prepare.yml
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
+- include: issue-certs-copy.yml
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
+- include: issue-certs-finish.yml
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
+- include: issue-certs-cleanup-local.yml
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
+  - tls-cleanup
+- include: issue-certs-cleanup.yml
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
+  - tls-cleanup
