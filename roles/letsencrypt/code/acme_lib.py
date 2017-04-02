@@ -114,7 +114,8 @@ _ALGORITHMS = {
     'rsa': RSA(),
     'p-256': ECC('p-256', 'prime256v1', 256),
     'p-384': ECC('p-384', 'secp384r1', 384),
-    # 'p-521': ECC('p-521', 'secp521r1', 528),  -- P-521 isn't supported yet (on Let's Encrypt staging server)
+    # 'p-521': ECC('p-521', 'secp521r1', 528),  -- P-521 isn't supported yet (on Let's Encrypt staging server);
+    #                                              see https://github.com/letsencrypt/boulder/issues/2217
 }
 
 
@@ -147,8 +148,11 @@ def create_key(key_length=4096, algorithm="rsa"):
     return algorithm.create_key(key_length)
 
 
-def generate_csr(key_filename, config_filename, domains):
-    """Given a private key and a list of domains, create a Certificate Signing Request (CSR)."""
+def generate_csr(key_filename, config_filename, domains, must_staple=False):
+    """Given a private key and a list of domains, create a Certificate Signing Request (CSR).
+
+    ``must_staple```: if set to ``True``, asks for a certificate with OCSP Must Staple enabled.
+    """
     # First generate config
     template = """HOME     = .
 RANDFILE = $ENV::HOME/.rnd
@@ -162,6 +166,12 @@ req_extensions     = req_SAN
 [req_SAN]
 subjectAltName = {0}
 """
+    if must_staple:
+        # See https://tools.ietf.org/html/rfc7633#section-6 and https://scotthelme.co.uk/ocsp-must-staple/
+        template += "1.3.6.1.5.5.7.1.24 = DER:30:03:02:01:05\n"
+        # For OpenSSL 1.1.0 or newer, we can use
+        #     template += "tlsfeature = status_request\n"
+        # instead.
     write_file(config_filename, template.format(','.join(['DNS:{0}'.format(domain) for domain in domains])))
     # Generate CSR
     if key_filename == '/dev/stdin':

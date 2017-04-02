@@ -17,13 +17,13 @@ def _gen_cert_key(key, key_length, algorithm):
     acme_lib.write_file(key, the_key)
 
 
-def _gen_csr(domains, key, csr):
+def _gen_csr(domains, key, csr, must_staple):
     if csr.endswith('.csr'):
         config_filename = csr[:-4] + '.cnf'
     else:
         config_filename = csr + '.cnf'
     sys.stderr.write('Writing OpenSSL config to {0}.\n'.format(config_filename))
-    the_csr = acme_lib.generate_csr(key, config_filename, domains.split(','))
+    the_csr = acme_lib.generate_csr(key, config_filename, domains.split(','), must_staple=must_staple)
     acme_lib.write_file(csr, the_csr)
 
 
@@ -161,7 +161,7 @@ if __name__ == "__main__":
             'gen-csr': {
                 'help': 'Generates a certificate signing request (CSR). Under *nix, use /dev/stdin after --key to provide key via stdin.',
                 'requires': ["domains", "key", "csr"],
-                'optional': [],
+                'optional': ["must_staple"],
                 'command': _gen_csr,
             },
             'print-csr': {
@@ -216,6 +216,7 @@ if __name__ == "__main__":
         parser.add_argument("--email", required=False, help="email address (will be associated with account)")
         parser.add_argument("--intermediate-url", required=False, default=acme_lib.default_intermediate_url, help="URL for the intermediate certificate (default: {0})".format(acme_lib.default_intermediate_url))
         parser.add_argument("--root-url", required=False, default=acme_lib.default_root_url, help="URL for the root certificate (default: {0})".format(acme_lib.default_root_url))
+        parser.add_argument("--must-staple", required=False, default=False, action='store_true', help="request must staple extension for certificate")
 
         args = parser.parse_args()
         if args.command is None:
