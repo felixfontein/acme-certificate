@@ -116,7 +116,7 @@ if __name__ == "__main__":
                 Let's Encrypt using the ACME protocol. It can both be run from the server
                 and from another machine (when splitting the process up in two steps).
                 The script needs to have access to your private account key, so PLEASE READ
-                THROUGH IT! It's only ~265+520 lines (including docstrings), so it won't
+                THROUGH IT! It's only 265+569 lines (including docstrings), so it won't
                 take too long.
 
                 ===Example Usage: Creating Letsencrypt account key, private key for certificate and CSR===

@@ -41,7 +41,7 @@ user_agent = "acme-compact"
 
 
 def _b64(b):
-    """helper function base64 encode for jose spec."""
+    """Helper function base64 encode for jose spec."""
     return base64.urlsafe_b64encode(b).decode('utf8').replace("=", "")
 
 
@@ -67,8 +67,11 @@ def _get_wellknown_path(domain, token, folder_for_domain):
     return os.path.join(folder, token)
 
 
-def _request(url):
-    return Request(url, headers={'User-Agent': user_agent})
+def _request(url, content_type=None):
+    headers = {'User-Agent': user_agent}
+    if content_type:
+        headers['Content-Type'] = content_type
+    return Request(url, headers=headers)
 
 
 # #####################################################################################################
@@ -76,35 +79,49 @@ def _request(url):
 
 
 class Algorithm(object):
+    """Abstracts an algorithm (RSA or ECC)."""
+
     def __init__(self, name):
+        """Initialize algorithm object."""
         self.name = name
 
     def __not_implemented(self, method):
+        """Helper method to raise not implemented errors."""
         raise Exception("Algorithm {0} does not support {1}!".format(self.name, method))
 
     def create_key(self, key_length):
+        """Create a private key of given length."""
         self.__not_implemented('create_key')
 
 
 class RSA(Algorithm):
+    """Abstracts the RSA algorithm."""
+
     def __init__(self):
+        """Create new RSA algorithm object."""
         super(RSA, self).__init__("RSA")
 
     def create_key(self, key_length):
+        """Generate RSA key with given key length."""
         return _run_openssl(['genrsa', str(key_length)]).decode('utf-8')
 
 
 class ECC(Algorithm):
+    """Abstracts Elliptic Curve based algorithms."""
+
     def __init__(self, curve, openssl_curve, bitlength):
+        """Create new ECC algorithm object for given JOSE curve name, OpenSSL curve name, and bit length."""
         super(ECC, self).__init__("ECC-{0}".format(curve))
         self.curve = curve
         self.openssl_curve = openssl_curve
         self.bitlength = bitlength
 
     def create_key(self, key_length):
+        """Generate ECC private key for this curve. The key length is ignored."""
         return _run_openssl(['ecparam', '-name', self.openssl_curve, '-genkey', '-noout']).decode('utf-8')
 
     def extract_point(self, pub_hex):
+        """Extract the public point coordinates from the given hexadecimal description."""
         if len(pub_hex) != 64:
             raise ValueError("Key error: public key has incorrect length")
         return pub_hex[:self.bitlength // 8], pub_hex[self.bitlength // 8:]
@@ -130,6 +147,7 @@ def _get_algorithm(algorithm):
 
 
 def read_stdin():
+    """Read data from stdin."""
     if sys.version_info < (3, 0):
         return sys.stdin.read()
     else:
@@ -243,9 +261,31 @@ def parse_account_key(account_key):
     return account_key_type, account_key, header, thumbprint
 
 
-def _send_signed_request(url, payload, header, CA, account_key_type, account_key):
-    """Helper function make signed requests."""
-    nonce = urlopen(_request(CA + "/directory")).headers['Replay-Nonce']
+def _lookup_directory(CA, *keys):
+    """Helper function to look up the correct URL(s) in the server's directory.
+
+    Returns a replay nonce (or None) and the URLs associated to the keys:
+    ``(nonce, url_1, url_2, ...)``
+    """
+    result = urlopen(_request(CA + "/directory"))
+    data = json.loads(result.read().decode('utf8'))
+    urls = [data.get(key, CA + '/acme/' + key) for key in keys]
+    nonce = result.headers['Replay-Nonce']
+    return (nonce, *urls)
+
+
+def _send_signed_request(payload, header, CA, account_key_type, account_key, key=None, url=None):
+    """Helper function make signed requests. Either ``key`` or ``url`` must be specified."""
+    # Make sure we know the URL, and figure out nonce_url (and see if we get a nonce as well)
+    assert key is not None or url is not None
+    if url is None:
+        nonce, url, nonce_url = _lookup_directory(CA, key, 'new-nonce')
+    else:
+        nonce, nonce_url = _lookup_directory(CA, 'new-nonce')
+    # If we didn't already got a nonce, ask nonce_url
+    if nonce is None:
+        nonce = urlopen(_request(nonce_url)).headers['Replay-Nonce']
+    # Prepare JOSE object
     payload64 = _b64(json.dumps(payload).encode('utf8'))
     protected = copy.deepcopy(header)
     protected.update({"nonce": nonce})
@@ -257,15 +297,15 @@ def _send_signed_request(url, payload, header, CA, account_key_type, account_key
         if len(sig) != 2:
             raise Exception("Failed to generate signature; cannot parse DER output:\n\n{0}".format(out))
         out = binascii.unhexlify(sig[0]) + binascii.unhexlify(sig[1])
-
     data = json.dumps({
         "header": header,
         "protected": protected64,
         "payload": payload64,
         "signature": _b64(out),
     })
+    # Send JOSE object
     try:
-        resp = urlopen(_request(url), data.encode('utf8'))
+        resp = urlopen(_request(url, 'application/jose+json'), data.encode('utf8'))
         return resp.getcode(), resp.read()
     except IOError as e:
         return getattr(e, "code", None), getattr(e, "read", e.__str__)()
@@ -278,7 +318,7 @@ def parse_csr(csr):
     """
     out = get_csr_as_text(csr)
     domains = set([])
-    common_name = re.search(r"Subject:.*? CN=([^\s,;/]+)", out)
+    common_name = re.search(r"Subject:.*? CN\s*=\s*([^\s,;/]+)", out)
     if common_name is not None:
         domains.add(common_name.group(1))
     for subject_alt_names in re.finditer(r"X509v3 Subject Alternative Name: \n +([^\n]+)\n", out, re.MULTILINE | re.DOTALL):
@@ -311,7 +351,7 @@ def register_account(header, CA, account_key_type, account_key, email_address=No
         contacts.append("tel:{0}".format(telephone))
     if len(contacts) > 0:
         data["contact"] = contacts
-    code, result = _send_signed_request(CA + "/acme/new-reg", data, header, CA, account_key_type, account_key)
+    code, result = _send_signed_request(data, header, CA, account_key_type, account_key, key="new-reg")
     if code == 201:
         return True
     elif code == 409:
@@ -327,10 +367,10 @@ def get_challenge(domain, header, CA, account_key_type, account_key, thumbprint)
     content for the token file.
     """
     # get new challenge
-    code, result = _send_signed_request(CA + "/acme/new-authz", {
+    code, result = _send_signed_request({
         "resource": "new-authz",
         "identifier": {"type": "dns", "value": domain},
-    }, header, CA, account_key_type, account_key)
+    }, header, CA, account_key_type, account_key, key="new-authz")
     if code != 201:
         raise ValueError("Error registering: {0} {1}".format(code, result))
 
@@ -363,10 +403,10 @@ def check_challenge(domain, token, keyauthorization):
 def notify_challenge(domain, header, CA, account_key_type, account_key, challenge, keyauthorization):
     """Notify the CA server that the token files are available on the webserver."""
     # notify challenge are met
-    code, result = _send_signed_request(challenge['uri'], {
+    code, result = _send_signed_request({
         "resource": "challenge",
         "keyAuthorization": keyauthorization,
-    }, header, CA, account_key_type, account_key)
+    }, header, CA, account_key_type, account_key, url=challenge['uri'])
     if code != 202:
         raise ValueError("Error triggering challenge: {0} {1}".format(code, result))
 
@@ -402,10 +442,10 @@ def retrieve_certificate(csr, header, CA, account_key_type, account_key):
     """Retrieve the certificate from the CA server."""
     sys.stderr.write("Signing certificate...")
     csr_der = _run_openssl(["req", "-in", csr, "-outform", "DER"])
-    code, result = _send_signed_request(CA + "/acme/new-cert", {
+    code, result = _send_signed_request({
         "resource": "new-cert",
         "csr": _b64(csr_der),
-    }, header, CA, account_key_type, account_key)
+    }, header, CA, account_key_type, account_key, key="new-cert")
     if code != 201:
         raise ValueError("Error signing certificate: {0} {1}".format(code, result))
     return """-----BEGIN CERTIFICATE-----\n{0}\n-----END CERTIFICATE-----\n""".format("\n".join(textwrap.wrap(base64.b64encode(result).decode('utf8'), 64)))

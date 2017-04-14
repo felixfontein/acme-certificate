@@ -6,7 +6,7 @@ certificates for your server, by either running this script on your server or
 by running it somewhere else. It does needs access to your private Let's Encrypt
 account key. Please note that this code is somewhat experimental, so don't use
 this in production environments without checking the code first. Since there
-isn't too much code (around 765 lines, including docstrings and CLI help) this
+isn't too much code (834 lines, including docstrings and CLI help) this
 should be manageable.
 
 **PLEASE READ THE SOURCE CODE! YOU MUST TRUST IT WITH YOUR PRIVATE KEYS!**
