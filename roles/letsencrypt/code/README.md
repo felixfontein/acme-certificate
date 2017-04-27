@@ -29,4 +29,5 @@ why I started a new project instead of simply forking (and starting a Pull
 Request for) the original project.
 
 This code should work with Python 2 and Python 3, and requires OpenSSL's
-command line tool `openssl` in the path.
+command line tool `openssl` in the path. It was tested with both OpenSSL 1.0.x
+and OpenSSL 1.1.0.
