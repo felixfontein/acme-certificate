@@ -271,7 +271,7 @@ def _lookup_directory(CA, *keys):
     data = json.loads(result.read().decode('utf8'))
     urls = [data.get(key, CA + '/acme/' + key) for key in keys]
     nonce = result.headers['Replay-Nonce']
-    return (nonce, *urls)
+    return tuple([nonce] + urls)
 
 
 def _send_signed_request(payload, header, CA, account_key_type, account_key, key=None, url=None):
