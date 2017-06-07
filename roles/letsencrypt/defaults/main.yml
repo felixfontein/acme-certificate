@@ -3,3 +3,4 @@ key_length: 4096
 key_name: "{{ domains[0] }}"
 keys_path: "keys/"
 scratch_path: "scratch/"
+ocsp_must_staple: false
