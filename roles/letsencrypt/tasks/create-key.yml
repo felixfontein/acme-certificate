@@ -1,4 +1,0 @@
----
-- name: "Creating private key for domains {{ ', '.join(domains) }}"
-  local_action: shell python {{ role_path }}/code/acme_compact.py gen-key --key "{{ keys_path }}{{ key_name }}.key" --algorithm {{ algorithm }} --key-length {{ key_length }}
-  run_once: True

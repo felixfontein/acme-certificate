@@ -1,8 +1,0 @@
----
-- name: "Preparing scratch folder"
-  local_action: file state=directory mode=0700 path={{ scratch_path }}challenges-{{ key_name }}
-  run_once: True
-
-- name: "Preparing challenges for domains {{ ', '.join(domains) }}"
-  local_action: shell python {{ role_path }}/code/acme_compact.py get-certificate-part-1 --account-key "{{ acme_account }}" --email "{{ acme_email }}" --csr "{{ keys_path }}{{ key_name }}.csr" --statefile "{{ scratch_path }}state-{{ key_name }}.json" --acme-dir "{{ scratch_path }}challenges-{{ key_name }}"
-  run_once: True

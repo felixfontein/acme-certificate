@@ -2,18 +2,22 @@
 
 This is a template for an [Ansible](https://github.com/ansible/ansible) role which
 uses [Let's Encrypt](https://letsencrypt.org/) to issue free TLS/SSL certificates
-for your server!
+for your server! This role requires Ansible 2.2 or newer and is based on the new
+[letsencrypt module](https://docs.ansible.com/ansible/latest/letsencrypt_module.html)
+coming with Ansible.
 
 The main advantage of this approach over others is that *almost no code is executed
 on your webserver*: you only need to modify this role to automatically put the
 challenge on the server (and later remove them). Everything else is executed on your
 local machine!
 
-(This does not cover installing them, you have to do that yourself in another role.)
+(This does not cover installing the certificates, you have to do that yourself in
+another role.)
 
 This uses the [acme-compact](https://github.com/felixfontein/acme-compact) library
 and command line interface, which is based on Daniel Roesler's
-[acme-tiny](https://github.com/diafygi/acme-tiny).
+[acme-tiny](https://github.com/diafygi/acme-tiny). Note that the library is only used
+to convenience tasks such as creating account keys, private keys and CSRs.
 
 ## Basic Usage
 
@@ -25,13 +29,10 @@ To create such a key, run
 
 (You can adjust the path `keys/` by setting the variable `keys_path`.)
 
-Note that before you can use this role, you *must* adjust the following files to your
-server's specific situation:
-
- * `roles/letsencrypt/issue-certs-copy.yml`
- * `roles/letsencrypt/issue-certs-cleanup.yml`
-
-Please see these files for further instructions and example content.
+Note that before you can use this role, you *should* adjust `roles/letsencrypt/main.yml`
+to your server's specific situation, or at least verify that it fits. Search for
+`Customize this for your server's specific setup!` to find all places you have to
+check. All examples below assume that you use the default (unmodified) `main.yml`.
 
 This code should work with Python 2 and Python 3, and requires OpenSSL's
 command line tool `openssl` in the path. Please note that this project is not well
@@ -42,9 +43,9 @@ production environment!
 
 Note that this Ansible role expects the Let's Encrypt account key to be in PEM format
 and not in JWK format, which is used by the
-[official Let's Encrypt client](https://github.com/letsencrypt/letsencrypt). If you
-have created an account key with the official client and now want to use this key with
-this ansible role, you have to convert it. One tool which can do this is
+[official Let's Encrypt client certbot](https://github.com/letsencrypt/letsencrypt). If
+you have created an account key with the official client and now want to use this key
+with this ansible role, you have to convert it. One tool which can do this is
 [pem-jwk](https://github.com/dannycoates/pem-jwk).
 
 ## Integrate this role to your server's playbook
@@ -175,10 +176,11 @@ The webserver configuration could look as follows (for nginx):
         ssl_certificate /etc/ssl/server-certs/www.example.com-fullchain.pem;
         ssl_certificate_key /etc/ssl/private/www.example.com.key;
         
-        # For OCSP stapling, we need a DNS resolver. Here only Google DNS servers
-        # are specified; I would prepent them by your hoster's DNS servers.
-        # You can usually find their IPs in /etc/resolv.conf on your webserver.
-        resolver 8.8.8.8 8.8.4.4 valid=300s;
+        # For OCSP stapling, we need a DNS resolver. Here only public Quad9 and
+        # Google DNS servers are specified; I would prepent them by your hoster's
+        # DNS servers. You can usually find their IPs in /etc/resolv.conf on your
+        # webserver.
+        resolver 9.9.9.9 8.8.8.8 8.8.4.4 valid=300s;
         resolver_timeout 10s;
         
         # Enabling OCSP stapling. Nginx will take care of retrieving the OCSP data
@@ -190,7 +192,8 @@ The webserver configuration could look as follows (for nginx):
         
         # Enables a SSL session cache. Adjust the numbers depending on your site's usage.
         ssl_session_cache shared:SSL:50m;
-        ssl_session_timeout 5m;
+        ssl_session_timeout 30m;
+        ssl_session_tickets off;
         
         # You should only use HSTS with proper certificates; the ones from Let's Encrypt
         # are fine for this, self-signed ones are not. See MozillaWiki for more details:

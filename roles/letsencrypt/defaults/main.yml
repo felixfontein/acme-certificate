@@ -2,5 +2,11 @@ algorithm: "rsa"
 key_length: 4096
 key_name: "{{ domains[0] }}"
 keys_path: "keys/"
-scratch_path: "scratch/"
-ocsp_must_staple: false
+ocsp_must_staple: False
+agreement: https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf
+acme_directory: https://acme-v01.api.letsencrypt.org/directory
+# For staging, use:
+#   acme_directory: https://acme-staging.api.letsencrypt.org
+challenge: http-01
+root_certificate: https://letsencrypt.org/certs/isrgrootx1.pem
+intermediate_certificate: https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
