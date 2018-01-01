@@ -29,10 +29,11 @@ To create such a key, run
 
 (You can adjust the path `keys/` by setting the variable `keys_path`.)
 
-Note that before you can use this role, you *should* adjust `roles/letsencrypt/main.yml`
-to your server's specific situation, or at least verify that it fits. Search for
-`Customize this for your server's specific setup!` to find all places you have to
-check. All examples below assume that you use the default (unmodified) `main.yml`.
+Note that before you can use this role, you *should* adjust `roles/letsencrypt/http-*.yml`
+to your server's specific situation (for HTTP challenges), or at least verify that
+it fits. Search for `Customize this for your server's specific setup!` to find all
+places you have to check. All examples below assume that you use the default
+(unmodified) tasks.
 
 This code should work with Python 2 and Python 3, and requires OpenSSL's
 command line tool `openssl` in the path. Please note that this project is not well
@@ -49,6 +50,11 @@ with this ansible role, you have to convert it. One tool which can do this is
 [pem-jwk](https://github.com/dannycoates/pem-jwk).
 
 ## Integrate this role to your server's playbook
+
+The role supports HTTP and DNS challenges. The type of challenge can be selected
+by defining `challenge`. The default value is `http-01` for HTTP challenges.
+
+### HTTP Challenges
 
 In this section I'm assuming you use nginx. Similar setups can be made for other
 web servers.
@@ -103,10 +109,40 @@ to do this is:
 With this config, if `/var/www/challenges/` is empty, your HTTP server will behave as if the
 `/.well-known/acme-challenge/` location isn't specified.
 
-
 If you have such a config, you can run `ansible-playbook sample-playbook.yml -t issue-tls-certs`
 or `ansible-playbook sample-playbook.yml -t issue-tls-certs-newkey` without any config change,
 and you will be issued new or renewed TLS/SSL certificates.
+
+If your setup is differently, you must adjust `roles/letsencrypt/http-*.yml` first. This in
+particular applies when you are using different users and/or access rights for your server.
+
+### DNS Challenges
+
+**THIS IS HIGHLY EXPERIMENTAL; USE AT OWN RISK!**
+
+This role now also offers support for DNS challenges. Currently, three DNS providers are supported:
+
+  * Amazon Route 53 (via the built-in [route53 module](http://docs.ansible.com/route53_module.html));
+  * Google Cloud DNS (via the built-in [gcdns_record module](https://docs.ansible.com/ansible/latest/gcdns_record_module.html));
+  * Hosttech DNS (via the external [hosttech_dns module](https://github.com/felixfontein/ansible-hosttech)).
+
+You can add support for more DNS providers by adding `roles/letsencrypt/dns-PROVIDER-create.yml`
+and `roles/letsencrypt/dns-PROVIDER-cleanup.yml` files.
+
+To use DNS challenges, you need to define more variables:
+
+  * `challenge` must be set to `dns-01`;
+  * `dns_provider` must be set to one of `route53`, `gcdns` and `hosttech`;
+  * for Route 53, `aws_access_key` and `aws_secret_key` must be set;
+  * for Google Cloud DNS, authentication information must be provided by adjusting
+    `roles/letsencrypt/tasks/dns-gcdns-*.yml`; note that this has not yet been tested!
+  * for Hosttech, `hosttech_username` and `hosttech_password` must be set.
+
+Please note that the DNS challenge code is experimental. The Route 53 and Hosttech functionality
+has been tested, but not in a proper production environment.
+
+Also, the code tries to extract the DNS zone from the domain by taking the last two components
+separated by dots. This will fail for example for `.co.uk` domains or other nested zones.
 
 ## Using the generated files for webserver configuration
 

@@ -1,0 +1,15 @@
+---
+# Clean up DNS challenges for DNS provider Google Cloud DNS
+- name: Cleaning up challenge DNS entries for domains {{ ', '.join(domains) }}" via Google Cloud DNS
+  local_action:
+    module: gcdns_record
+    state: absent
+    zone: "{{ item.key | regex_replace('^(?:.*\\.|)([^.]+\\.[^.]+)$', '\\1') }}"
+    record: "{{ item.value[challenge].resource }}.{{ item.key }}"
+    type: TXT
+    ttl: 300
+    value: '"{{ item.value[challenge].resource_value }}"'
+    overwrite: true
+    ...
+  run_once: True
+  with_dict: "{{ lets_encrypt_challenge.get('challenge_data', {}) }}"

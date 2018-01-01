@@ -1,4 +1,9 @@
 ---
+- name: Sanity checks
+  fail:
+    msg: "dns_provider must be defined for dns-01 DNS challenge"
+  when: "challenge == 'dns-01' and dns_provider is undefined"
+
 - block:
   - name: "Creating private key for domains {{ ', '.join(domains) }}"
     local_action: command python {{ role_path }}/code/acme_compact.py gen-key --key "{{ keys_path }}{{ key_name }}.key" --algorithm {{ algorithm }} --key-length {{ key_length }}
@@ -61,26 +66,13 @@
   - issue-tls-certs
 
 - block:
-  # Create up challenge files directory on server. Customize this for your server's specific setup!
-  - name: Creating challenge destination directory
-    file:
-      dest: "{{ server_location }}"
-      state: directory
-      owner: root
-      group: http
-      mode: "0750"
+  # Set up HTTP challenges
+  - include_tasks: http-create.yml
     when: "challenge == 'http-01'"
 
-  # Create challenge files on server. Customize this for your server's specific setup!
-  - name: Copying challenge files for domains {{ ', '.join(domains) }}"
-    copy:
-      dest: "{{ server_location }}/{{ item.value[challenge].resource[('.well-known/acme-challenge/'|length):] }}"
-      content: "{{ item.value[challenge].resource_value }}"
-      owner: root
-      group: http
-      mode: "0640"
-    when: "challenge == 'http-01'"
-    with_dict: "{{ lets_encrypt_challenge.challenge_data }}"
+  # Set up DNS challenges
+  - include_tasks: dns-{{ dns_provider }}-create.yml
+    when: "challenge == 'dns-01'"
 
   - name: "Getting certificates for domains {{ ', '.join(domains) }}"
     local_action:
@@ -111,6 +103,14 @@
       state: absent
     when: "challenge == 'http-01'"
     with_dict: "{{ lets_encrypt_challenge.get('challenge_data', {}) }}"
+
+  # Clean up HTTP challenges
+  - include_tasks: http-cleanup.yml
+    when: "challenge == 'http-01'"
+
+  # Clean up DNS challenges
+  - include_tasks: dns-{{ dns_provider }}-cleanup.yml
+    when: "challenge == 'dns-01'"
 
   tags:
   - issue-tls-certs-newkey
