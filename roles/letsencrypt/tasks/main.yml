@@ -54,6 +54,7 @@
     challenge: "{{ challenge }}"
     acme_directory: "{{ acme_directory }}"
     remaining_days: 91
+  run_once: True
   register: lets_encrypt_challenge
   tags:
   - issue-tls-certs-newkey
@@ -93,6 +94,7 @@
       acme_directory: "{{ acme_directory }}"
       remaining_days: 91
       data: "{{ lets_encrypt_challenge }}"
+    run_once: True
 
   - name: "Creating chained certificate for domains {{ ', '.join(domains) }}"
     local_action:
