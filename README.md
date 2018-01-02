@@ -14,10 +14,8 @@ local machine!
 (This does not cover installing the certificates, you have to do that yourself in
 another role.)
 
-This uses the [acme-compact](https://github.com/felixfontein/acme-compact) library
-and command line interface, which is based on Daniel Roesler's
-[acme-tiny](https://github.com/diafygi/acme-tiny). Note that the library is only used
-to convenience tasks such as creating account keys, private keys and CSRs.
+The role uses a Python script (`certtool.py`) for convenience tasks with certificates,
+like creating account keys and Certificate Sign Requests (CSRs).
 
 ## Basic Usage
 
@@ -25,7 +23,7 @@ See `sample-playbook.yml` for how to use this role. Please note that it assumes 
 account key has already been created (and is available at `keys/letsencrypt-account.key`).
 To create such a key, run
 
-    python roles/letsencrypt/code/acme_compact.py gen-account-key --account-key keys/letsencrypt-account.key
+    python roles/letsencrypt/code/certtool.py gen-account-key --account-key keys/letsencrypt-account.key
 
 (You can adjust the path `keys/` by setting the variable `keys_path`.)
 

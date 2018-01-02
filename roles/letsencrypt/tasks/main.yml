@@ -6,7 +6,7 @@
 
 - block:
   - name: "Creating private key for domains {{ ', '.join(domains) }}"
-    local_action: command python {{ role_path }}/code/acme_compact.py gen-key --key "{{ keys_path }}{{ key_name }}.key" --algorithm {{ algorithm }} --key-length {{ key_length }}
+    local_action: command python {{ role_path }}/code/certtool.py gen-key --key "{{ keys_path }}{{ key_name }}.key" --algorithm {{ algorithm }} --key-length {{ key_length }}
     run_once: True
   tags:
   - issue-tls-certs-newkey
@@ -14,7 +14,7 @@
 
 - block:
   - name: "Creating CSR for domains {{ ', '.join(domains) }}"
-    local_action: command python {{ role_path }}/code/acme_compact.py gen-csr --key "{{ keys_path }}{{ key_name }}.key" --csr "{{ keys_path }}{{ key_name }}.csr" --domains "{{ ','.join(domains) }}" {% if ocsp_must_staple %}--must-staple{% endif %}
+    local_action: command python {{ role_path }}/code/certtool.py gen-csr --key "{{ keys_path }}{{ key_name }}.key" --csr "{{ keys_path }}{{ key_name }}.csr" --domains "{{ ','.join(domains) }}" {% if ocsp_must_staple %}--must-staple{% endif %}
     run_once: True
   tags:
   - issue-tls-certs-newkey
