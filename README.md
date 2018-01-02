@@ -125,7 +125,11 @@ This role now also offers support for DNS challenges. Currently, three DNS provi
   * Hosttech DNS (via the external [hosttech_dns module](https://github.com/felixfontein/ansible-hosttech)).
 
 You can add support for more DNS providers by adding `roles/letsencrypt/dns-PROVIDER-create.yml`
-and `roles/letsencrypt/dns-PROVIDER-cleanup.yml` files.
+and `roles/letsencrypt/dns-PROVIDER-cleanup.yml` files. Ansible modules of interest are
+[azure_rm_dnsrecordset](https://docs.ansible.com/ansible/latest/azure_rm_dnsrecordset_module.html) for Azure,
+[os_recordset](https://docs.ansible.com/ansible/latest/os_recordset_module.html) for OpenStack,
+[rax_dns_record](https://docs.ansible.com/ansible/latest/rax_dns_record_module.html) for RackSpace, and
+[udm_dns_record](https://docs.ansible.com/ansible/latest/udm_dns_record_module.html) for univention corporate servers (UCS).
 
 To use DNS challenges, you need to define more variables:
 
