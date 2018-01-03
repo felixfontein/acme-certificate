@@ -1,5 +1,5 @@
 ---
-# Clean up challenge files on server. Customize this for your server's specific setup!
+# Clean up challenge files on server.
 - name: "Cleaning up challenge files for domains {{ ', '.join(domains) }}"
   file:
     path: "{{ server_location }}/{{ item.value[challenge].resource[('.well-known/acme-challenge/'|length):] }}"

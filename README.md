@@ -27,12 +27,6 @@ To create such a key, run
 
 (You can adjust the path `keys/` by setting the variable `keys_path`.)
 
-Note that before you can use this role, you *should* adjust `roles/letsencrypt/http-*.yml`
-to your server's specific situation (for HTTP challenges), or at least verify that
-it fits. Search for `Customize this for your server's specific setup!` to find all
-places you have to check. All examples below assume that you use the default
-(unmodified) tasks.
-
 This code should work with Python 2 and Python 3, and requires OpenSSL's
 command line tool `openssl` in the path. Please note that this project is not well
 tested and audited, so please check the code intensively before using this in a
@@ -81,9 +75,14 @@ To allow the `letsencrypt` role to put something at
         }
     }
 
-Then all other URLs on `*.example.com` and `example.com` are still redirected, while everything
-in `*.example.com/.well-known/acme-challenge/` is served from `/var/www/challenges`. That's the
-place where the example config for the `letsencrypt` role puts all challenges.
+With this nginx config, all other URLs on `*.example.com` and `example.com` are still redirected,
+while everything in `*.example.com/.well-known/acme-challenge/` is served from `/var/www/challenges`.
+
+For this to work, you must set `server_location` to `/var/www/challenges/` in your playbook. You
+can adjust the access rights, owner and group of the generated files and folders by defining
+`http_challenge_folder_mode`, `http_challenge_file_mode`, `http_challenge_user` and
+`http_challenge_group`. Per default, the files are owned by `root` with group `http`, and are
+readable only by owner and group.
 
 You can even improve on this by redirecting all URLs in `*.example.com/.well-known/acme-challenge/`
 which do not resolve to a valid file in `/var/www/challenges` to your HTTPS server as well. One way

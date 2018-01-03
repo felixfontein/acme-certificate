@@ -1,19 +1,19 @@
 ---
-# Create up challenge files directory on server. Customize this for your server's specific setup!
+# Create up challenge files directory on server.
 - name: Creating challenge destination directory
   file:
     dest: "{{ server_location }}"
     state: directory
-    owner: root
-    group: http
-    mode: "0750"
+    owner: "{{ http_challenge_user }}"
+    group: "{{ http_challenge_group }}"
+    mode: "{{ http_challenge_folder_mode }}"
 
-# Create challenge files on server. Customize this for your server's specific setup!
+# Create challenge files on server.
 - name: Copying challenge files for domains {{ ', '.join(domains) }}"
   copy:
     dest: "{{ server_location }}/{{ item.value[challenge].resource[('.well-known/acme-challenge/'|length):] }}"
     content: "{{ item.value[challenge].resource_value }}"
-    owner: root
-    group: http
-    mode: "0640"
+    owner: "{{ http_challenge_user }}"
+    group: "{{ http_challenge_group }}"
+    mode: "{{ http_challenge_file_mode }}"
   with_dict: "{{ lets_encrypt_challenge.challenge_data }}"
