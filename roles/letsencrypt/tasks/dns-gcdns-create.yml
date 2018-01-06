@@ -5,7 +5,7 @@
     module: gcdns_record
     state: present
     zone: "{{ item.key | regex_replace('^(?:.*\\.|)([^.]+\\.[^.]+)$', '\\1') }}"
-    record: "{{ item.value[challenge].resource }}.{{ item.key }}"
+    record: "{{ item.value[challenge].resource }}.{{ item.key | regex_replace('^\\*\\.', '') }}"
     type: TXT
     ttl: 300
     value: '"{{ item.value[challenge].resource_value }}"'

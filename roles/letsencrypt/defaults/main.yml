@@ -1,6 +1,6 @@
 algorithm: "rsa"
 key_length: 4096
-key_name: "{{ domains[0] }}"
+key_name: "{{ domains[0].replace('*', '_') }}"
 keys_path: "keys/"
 ocsp_must_staple: False
 agreement: https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf
