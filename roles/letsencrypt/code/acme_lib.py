@@ -100,6 +100,9 @@ class RSA(Algorithm):
     def __init__(self):
         """Create new RSA algorithm object."""
         super(RSA, self).__init__("RSA")
+        self.jws_algorithm = 'RS256'
+        self.jws_hash = 'sha256'
+        self.jws_hash_bytes = 32
 
     def create_key(self, key_length):
         """Generate RSA key with given key length."""
@@ -109,12 +112,16 @@ class RSA(Algorithm):
 class ECC(Algorithm):
     """Abstracts Elliptic Curve based algorithms."""
 
-    def __init__(self, curve, openssl_curve, bitlength):
+    def __init__(self, curve, openssl_curve, bitlength, jws_algorithm, jws_hash, jws_hash_bytes):
         """Create new ECC algorithm object for given JOSE curve name, OpenSSL curve name, and bit length."""
         super(ECC, self).__init__("ECC-{0}".format(curve))
         self.curve = curve
         self.openssl_curve = openssl_curve
         self.bitlength = bitlength
+        self.bytelength = (bitlength + 7) // 8
+        self.jws_algorithm = jws_algorithm
+        self.jws_hash = jws_hash
+        self.jws_hash_bytes = jws_hash_bytes
 
     def create_key(self, key_length):
         """Generate ECC private key for this curve. The key length is ignored."""
@@ -122,17 +129,18 @@ class ECC(Algorithm):
 
     def extract_point(self, pub_hex):
         """Extract the public point coordinates from the given hexadecimal description."""
-        if len(pub_hex) != 64:
+        if len(pub_hex) != 2 * self.bytelength:
             raise ValueError("Key error: public key has incorrect length")
-        return pub_hex[:self.bitlength // 8], pub_hex[self.bitlength // 8:]
+        return pub_hex[:self.bytelength], pub_hex[self.bytelength:]
 
 
 _ALGORITHMS = {
     'rsa': RSA(),
-    'p-256': ECC('p-256', 'prime256v1', 256),
-    'p-384': ECC('p-384', 'secp384r1', 384),
-    # 'p-521': ECC('p-521', 'secp521r1', 528),  -- P-521 isn't supported yet (on Let's Encrypt staging server);
-    #                                              see https://github.com/letsencrypt/boulder/issues/2217
+    'p-256': ECC('p-256', 'prime256v1', 256, 'ES256', 'sha256', 32),
+    'p-384': ECC('p-384', 'secp384r1', 384, 'ES384', 'sha384', 48),
+    # 'p-521': ECC('p-521', 'secp521r1', 528, 'ES512', 'sha512', 64),
+    #          -- P-521 isn't supported yet (on Let's Encrypt staging server);
+    #             see https://github.com/letsencrypt/boulder/issues/2217
 }
 
 
@@ -207,7 +215,7 @@ def get_csr_as_text(csr_filename):
 def parse_account_key(account_key):
     """Parse account RSA private key to get public key.
 
-    Returns four variables (account_key_type, account_key, header, thumbprint)
+    Returns five variables (account_key_type, account_key, account_key_algorithm, header, thumbprint)
     needed for other low-level functions.
     """
     sys.stderr.write("Parsing account key...")
@@ -228,11 +236,12 @@ def parse_account_key(account_key):
         pub_exp = "{0:x}".format(int(pub_exp))
         pub_exp = "0{0}".format(pub_exp) if len(pub_exp) % 2 else pub_exp
         pub_exp64 = _b64(binascii.unhexlify(pub_exp))
+        algorithm = _get_algorithm('rsa')
         header = {
-            "alg": "RS256",
+            "alg": algorithm.jws_algorithm,
             "jwk": {
-                "e": pub_exp64,
                 "kty": "RSA",
+                "e": pub_exp64,
                 "n": pub_mod64,
             },
         }
@@ -246,7 +255,7 @@ def parse_account_key(account_key):
         algorithm = _get_algorithm(curve)
         x, y = algorithm.extract_point(pub_hex)
         header = {
-            "alg": "ES256",
+            "alg": algorithm.jws_algorithm,
             "jwk": {
                 "kty": "EC",
                 "crv": curve.upper(),
@@ -258,7 +267,7 @@ def parse_account_key(account_key):
     thumbprint = _b64(hashlib.sha256(accountkey_json.encode('utf8')).digest())
     sys.stderr.write(" ok ")
     sys.stderr.flush()
-    return account_key_type, account_key, header, thumbprint
+    return account_key_type, account_key, algorithm, header, thumbprint
 
 
 def _lookup_directory(CA, *keys):
@@ -274,7 +283,7 @@ def _lookup_directory(CA, *keys):
     return tuple([nonce] + urls)
 
 
-def _send_signed_request(payload, header, CA, account_key_type, account_key, key=None, url=None):
+def _send_signed_request(payload, header, CA, account_key_type, account_key, account_key_algorithm, key=None, url=None):
     """Helper function make signed requests. Either ``key`` or ``url`` must be specified."""
     # Make sure we know the URL, and figure out nonce_url (and see if we get a nonce as well)
     assert key is not None or url is not None
@@ -290,10 +299,10 @@ def _send_signed_request(payload, header, CA, account_key_type, account_key, key
     protected = copy.deepcopy(header)
     protected.update({"nonce": nonce})
     protected64 = _b64(json.dumps(protected).encode('utf8'))
-    out = _run_openssl(["dgst", "-sha256", "-sign", account_key], "{0}.{1}".format(protected64, payload64).encode('utf8'))
+    out = _run_openssl(["dgst", "-{0}".format(account_key_algorithm.jws_hash), "-sign", account_key], "{0}.{1}".format(protected64, payload64).encode('utf8'))
     if account_key_type == 'ec':
         out = _run_openssl(["asn1parse", "-inform", "DER"], input=out).decode("utf8")
-        sig = re.findall(r"prim:\s+INTEGER\s+:([0-9A-F]{64})\n", out)
+        sig = re.findall(r"prim:\s+INTEGER\s+:([0-9A-F]{%s})\n" % (2 * account_key_algorithm.jws_hash_bytes), out)
         if len(sig) != 2:
             raise Exception("Failed to generate signature; cannot parse DER output:\n\n{0}".format(out))
         out = binascii.unhexlify(sig[0]) + binascii.unhexlify(sig[1])
@@ -321,14 +330,14 @@ def parse_csr(csr):
     common_name = re.search(r"Subject:.*? CN\s*=\s*([^\s,;/]+)", out)
     if common_name is not None:
         domains.add(common_name.group(1))
-    for subject_alt_names in re.finditer(r"X509v3 Subject Alternative Name: \n +([^\n]+)\n", out, re.MULTILINE | re.DOTALL):
+    for subject_alt_names in re.finditer(r"X509v3 Subject Alternative Name: (?:critical)?\n +([^\n]+)\n", out, re.MULTILINE | re.DOTALL):
         for san in subject_alt_names.group(1).split(", "):
             if san.startswith("DNS:"):
                 domains.add(san[4:])
     return sorted(domains)
 
 
-def register_account(header, CA, account_key_type, account_key, email_address=None, telephone=None):
+def register_account(header, CA, account_key_type, account_key, account_key_algorithm, email_address=None, telephone=None):
     """Create account on CA server.
 
     Return True if the account was created and False if it already exists.
@@ -351,7 +360,7 @@ def register_account(header, CA, account_key_type, account_key, email_address=No
         contacts.append("tel:{0}".format(telephone))
     if len(contacts) > 0:
         data["contact"] = contacts
-    code, result = _send_signed_request(data, header, CA, account_key_type, account_key, key="new-reg")
+    code, result = _send_signed_request(data, header, CA, account_key_type, account_key, account_key_algorithm, key="new-reg")
     if code == 201:
         return True
     elif code == 409:
@@ -360,7 +369,7 @@ def register_account(header, CA, account_key_type, account_key, email_address=No
         raise ValueError("Error registering: {0} {1}".format(code, result))
 
 
-def get_challenge(domain, header, CA, account_key_type, account_key, thumbprint):
+def get_challenge(domain, header, CA, account_key_type, account_key, account_key_algorithm, thumbprint):
     """Retrieve challenge for a domain.
 
     Returns the challenge object, the challenge token as well as the
@@ -370,7 +379,7 @@ def get_challenge(domain, header, CA, account_key_type, account_key, thumbprint)
     code, result = _send_signed_request({
         "resource": "new-authz",
         "identifier": {"type": "dns", "value": domain},
-    }, header, CA, account_key_type, account_key, key="new-authz")
+    }, header, CA, account_key_type, account_key, account_key_algorithm, key="new-authz")
     if code != 201:
         raise ValueError("Error registering: {0} {1}".format(code, result))
 
@@ -400,13 +409,13 @@ def check_challenge(domain, token, keyauthorization):
         return False
 
 
-def notify_challenge(domain, header, CA, account_key_type, account_key, challenge, keyauthorization):
+def notify_challenge(domain, header, CA, account_key_type, account_key, account_key_algorithm, challenge, keyauthorization):
     """Notify the CA server that the token files are available on the webserver."""
     # notify challenge are met
     code, result = _send_signed_request({
         "resource": "challenge",
         "keyAuthorization": keyauthorization,
-    }, header, CA, account_key_type, account_key, url=challenge['uri'])
+    }, header, CA, account_key_type, account_key, account_key_algorithm, url=challenge['uri'])
     if code != 202:
         raise ValueError("Error triggering challenge: {0} {1}".format(code, result))
 
@@ -438,14 +447,14 @@ def check_challenge_verified(domain, challenge, wait=True):
             raise ValueError("{0} challenge did not pass: {1}".format(domain, challenge_status))
 
 
-def retrieve_certificate(csr, header, CA, account_key_type, account_key):
+def retrieve_certificate(csr, header, CA, account_key_type, account_key, account_key_algorithm):
     """Retrieve the certificate from the CA server."""
     sys.stderr.write("Signing certificate...")
     csr_der = _run_openssl(["req", "-in", csr, "-outform", "DER"])
     code, result = _send_signed_request({
         "resource": "new-cert",
         "csr": _b64(csr_der),
-    }, header, CA, account_key_type, account_key, key="new-cert")
+    }, header, CA, account_key_type, account_key, account_key_algorithm, key="new-cert")
     if code != 201:
         raise ValueError("Error signing certificate: {0} {1}".format(code, result))
     return """-----BEGIN CERTIFICATE-----\n{0}\n-----END CERTIFICATE-----\n""".format("\n".join(textwrap.wrap(base64.b64encode(result).decode('utf8'), 64)))
@@ -477,7 +486,7 @@ def deserialize_state(serialized_state):
     Raises exception in case this is not a valid state.
     """
     result = json.loads(serialized_state)
-    if type(result) != dict or 'account_key' not in result or 'account_key_type' not in result or 'header' not in result or 'thumbprint' not in result or 'CA' not in result or 'challenges' not in result:
+    if type(result) != dict or 'account_key' not in result or 'account_key_type' not in result or 'account_key_algorithm' not in result or 'header' not in result or 'thumbprint' not in result or 'CA' not in result or 'challenges' not in result:
         raise ValueError("Not a valid serialized state!")
     return result
 
@@ -487,17 +496,17 @@ def get_challenges(account_key, csr, CA, email_address=None, telephone=None):
 
     Returns a state object.
     """
-    account_key_type, account_key, header, thumbprint = parse_account_key(account_key)
+    account_key_type, account_key, account_key_algorithm, header, thumbprint = parse_account_key(account_key)
     # find domains
     domains = parse_csr(csr)
     # get the certificate domains and expiration
-    register_account(header, CA, account_key_type, account_key, email_address=email_address, telephone=telephone)
+    register_account(header, CA, account_key_type, account_key, account_key_algorithm, email_address=email_address, telephone=telephone)
     challenges = []
     # verify each domain
     for domain in domains:
-        challenge, token, keyauthorization = get_challenge(domain, header, CA, account_key_type, account_key, thumbprint)
+        challenge, token, keyauthorization = get_challenge(domain, header, CA, account_key_type, account_key, account_key_algorithm, thumbprint)
         challenges.append({'domain': domain, 'challenge': challenge, 'token': token, 'keyauthorization': keyauthorization})
-    return {'account_key_type': account_key_type, 'account_key': account_key, 'header': header, 'thumbprint': thumbprint, 'CA': CA, 'challenges': challenges}
+    return {'account_key_type': account_key_type, 'account_key_algorithm': account_key_algorithm, 'account_key': account_key, 'header': header, 'thumbprint': thumbprint, 'CA': CA, 'challenges': challenges}
 
 
 def write_challenges(state, folder_for_domain):
@@ -548,7 +557,7 @@ def notify_challenges(state):
         domain = challenge_entry['domain']
         keyauthorization = challenge_entry['keyauthorization']
         challenge = challenge_entry['challenge']
-        notify_challenge(domain, state['header'], state['CA'], state['account_key_type'], state['account_key'], challenge, keyauthorization)
+        notify_challenge(domain, state['header'], state['CA'], state['account_key_type'], state['account_key'], state['account_key_algorithm'], challenge, keyauthorization)
 
 
 def check_challenges(state, csr, inform=None):
@@ -567,4 +576,4 @@ def check_challenges(state, csr, inform=None):
         check_challenge_verified(domain, challenge, wait=True)
         if callable(inform):
             inform(domain)
-    return retrieve_certificate(csr, state['header'], state['CA'], state['account_key_type'], state['account_key'])
+    return retrieve_certificate(csr, state['header'], state['CA'], state['account_key_type'], state['account_key'], state['account_key_algorithm'])
