@@ -1,8 +1,0 @@
----
-- name: "Cleaning up state and challenge files"
-  local_action: file path={{ scratch_path }}state-{{ key_name }}.json state=absent
-  run_once: True
-
-- name: "Cleaning up state and challenge files"
-  local_action: file path={{ scratch_path }}challenges-{{ key_name }} state=absent
-  run_once: True

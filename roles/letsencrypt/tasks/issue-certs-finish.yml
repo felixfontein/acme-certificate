@@ -1,8 +1,0 @@
----
-- name: "Getting certificate for domains {{ ', '.join(domains) }}"
-  local_action: shell python {{ role_path }}/code/acme_compact.py get-certificate-part-2 --csr "{{ keys_path }}{{ key_name }}.csr" --statefile "{{ scratch_path }}state-{{ key_name }}.json" --cert "{{ keys_path }}{{ key_name }}.pem"
-  run_once: True
-
-- name: "Creating chained certificate for domains {{ ', '.join(domains) }}"
-  local_action: shell cat "{{ keys_path }}{{ key_name }}.pem" "{{ keys_path }}{{ key_name }}-chain.pem" > "{{ keys_path }}{{ key_name }}-fullchain.pem"
-  run_once: True
