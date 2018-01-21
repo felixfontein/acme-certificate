@@ -67,11 +67,11 @@
 
 - block:
   # Set up HTTP challenges
-  - include_tasks: http-create.yml
+  - include: http-create.yml
     when: "challenge == 'http-01'"
 
   # Set up DNS challenges
-  - include_tasks: dns-{{ dns_provider }}-create.yml
+  - include: dns-{{ dns_provider }}-create.yml
     when: "challenge == 'dns-01'"
 
   - name: "Getting certificates for domains {{ ', '.join(domains) }}"
@@ -97,11 +97,11 @@
 
   always:
   # Clean up HTTP challenges
-  - include_tasks: http-cleanup.yml
+  - include: http-cleanup.yml
     when: "challenge == 'http-01'"
 
   # Clean up DNS challenges
-  - include_tasks: dns-{{ dns_provider }}-cleanup.yml
+  - include: dns-{{ dns_provider }}-cleanup.yml
     when: "challenge == 'dns-01'"
 
   tags:
