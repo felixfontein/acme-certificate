@@ -1,8 +1,8 @@
 # letsencrypt-ansible
 
-This is a template for an [Ansible](https://github.com/ansible/ansible) role which
-uses [Let's Encrypt](https://letsencrypt.org/) to issue free TLS/SSL certificates
-for your server! This role requires Ansible 2.2 or newer and is based on the new
+This is an [Ansible](https://github.com/ansible/ansible) role which uses
+[Let's Encrypt](https://letsencrypt.org/) to issue free TLS/SSL certificates for your
+server. This role requires Ansible 2.2 or newer and is based on the new
 [letsencrypt module](https://docs.ansible.com/ansible/latest/letsencrypt_module.html)
 coming with Ansible.
 
