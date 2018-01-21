@@ -1,0 +1,21 @@
+galaxy_info:
+  author: Felix Fontein
+  description: >
+    Wrapper of Ansible's included letsencrypt module, whose aim is that almost no code
+    is executed on the webserver. Requires openssl and Python installed locally and
+    available on executable path.
+
+  license: MIT
+
+  min_ansible_version: 2.2
+
+  galaxy_tags:
+  - letsencrypt
+  - ssl
+  - tls
+  - https
+  - encryption
+  - security
+  - web
+
+dependencies: []
