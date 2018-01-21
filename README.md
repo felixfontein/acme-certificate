@@ -6,9 +6,13 @@ for your server! This role requires Ansible 2.2 or newer and is based on the new
 [letsencrypt module](https://docs.ansible.com/ansible/latest/letsencrypt_module.html)
 coming with Ansible.
 
+(If you prefer the [acme_compact](https://github.com/felixfontein/acme-compact) based
+version, you can check out the
+[acme_compact_version branch](https://github.com/felixfontein/letsencrypt-ansible/tree/acme_compact_version).)
+
 The main advantage of this approach over others is that *almost no code is executed
-on your webserver*: you only need to modify this role to automatically put the
-challenge on the server (and later remove them). Everything else is executed on your
+on your webserver*: only when you use HTTP challenges, files need to be copied onto
+your webserver, and afterwards deleted from it. Everything else is executed on your
 local machine!
 
 (This does not cover installing the certificates, you have to do that yourself in

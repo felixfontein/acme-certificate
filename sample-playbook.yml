@@ -1,7 +1,59 @@
 ---
 - name: server setup
   hosts: webserver
+  vars:
+    acme_account: 'keys/letsencrypt-account.key'
+    acme_email: 'mail@example.com'
+    # For HTTP challenges:
+    server_location: '/var/www/challenges/'
+    http_challenge_user: root
+    http_challenge_group: http
+    http_challenge_folder_mode: "0750"
+    http_challenge_file_mode: "0640"
+    # For DNS challenges:
+    dns_provider: route53
+    aws_access_key: REPLACE_WITH_YOUR_ACCESS_KEY
+    aws_secret_key: REPLACE_WITH_YOUR_SECRET_KEY
   roles:
-    - { role: letsencrypt, domains: ['example.com', 'www.example.com'], server_location: '/var/www/challenges/', acme_account: 'keys/letsencrypt-account.key', acme_email: 'mail@example.com' }
-    - { role: letsencrypt, domains: ['another.example.com'],            server_location: '/var/www/challenges/', acme_account: 'keys/letsencrypt-account.key', acme_email: 'mail@example.com', key_name: 'another.example.com-rsa', key_length: 4096 }
-    - { role: letsencrypt, domains: ['another.example.com'],            server_location: '/var/www/challenges/', acme_account: 'keys/letsencrypt-account.key', acme_email: 'mail@example.com', key_name: 'another.example.com-ecc', algorithm: 'p-256' }
+    - role: letsencrypt
+      domains: ['example.com', 'www.example.com']
+      # Use DNS challenges:
+      challenge: dns-01
+      # The certificate files will be stored at:
+      #    keys/example.com.key  (private key)
+      #    keys/example.com.csr  (certificate signing request)
+      #    keys/example.com.pem  (certificate)
+      #    keys/example.com.cnf  (OpenSSL config for CSR creation -- can be safely deleted)
+      #    keys/example.com-chain.pem  (intermediate certificate)
+      #    keys/example.com-fullchain.pem  (certificate with intermediate certificate)
+      #    keys/example.com-root.pem  (root certificate)
+      #    keys/example.com-rootchain.pem  (intermediate certificate with root certificate)
+    - role: letsencrypt
+      domains: ['another.example.com']
+      key_name: 'another.example.com-rsa'
+      key_length: 4096
+      # Use HTTP challenges:
+      challenge: http-01
+      # The certificate files will be stored at:
+      #    keys/another.example.com-rsa.key  (private key)
+      #    keys/another.example.com-rsa.csr  (certificate signing request)
+      #    keys/another.example.com-rsa.pem  (certificate)
+      #    keys/another.example.com-rsa.cnf  (OpenSSL config for CSR creation -- can be safely deleted)
+      #    keys/another.example.com-rsa-chain.pem  (intermediate certificate)
+      #    keys/another.example.com-rsa-fullchain.pem  (certificate with intermediate certificate)
+      #    keys/another.example.com-rsa-root.pem  (root certificate)
+      #    keys/another.example.com-rsa-rootchain.pem  (intermediate certificate with root certificate)
+    - role: letsencrypt
+      domains: ['another.example.com']
+      key_name: 'another.example.com-ecc'
+      algorithm: 'p-256'
+      # Use HTTP challenges (default for challenge is http-01).
+      # The certificate files will be stored at:
+      #    keys/another.example.com-ecc.key  (private key)
+      #    keys/another.example.com-ecc.csr  (certificate signing request)
+      #    keys/another.example.com-ecc.pem  (certificate)
+      #    keys/another.example.com-ecc.cnf  (OpenSSL config for CSR creation -- can be safely deleted)
+      #    keys/another.example.com-ecc-chain.pem  (intermediate certificate)
+      #    keys/another.example.com-ecc-fullchain.pem  (certificate with intermediate certificate)
+      #    keys/another.example.com-ecc-root.pem  (root certificate)
+      #    keys/another.example.com-ecc-rootchain.pem  (intermediate certificate with root certificate)
