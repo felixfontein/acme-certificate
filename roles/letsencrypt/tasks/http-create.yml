@@ -7,6 +7,9 @@
     owner: "{{ http_challenge_user }}"
     group: "{{ http_challenge_group }}"
     mode: "{{ http_challenge_folder_mode }}"
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
 
 # Create challenge files on server.
 - name: Copying challenge files for domains {{ ', '.join(domains) }}"
@@ -17,3 +20,6 @@
     group: "{{ http_challenge_group }}"
     mode: "{{ http_challenge_file_mode }}"
   with_dict: "{{ lets_encrypt_challenge.challenge_data }}"
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs

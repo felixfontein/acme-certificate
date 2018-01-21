@@ -13,3 +13,6 @@
     ...
   run_once: True
   with_dict: "{{ lets_encrypt_challenge.challenge_data }}"
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs

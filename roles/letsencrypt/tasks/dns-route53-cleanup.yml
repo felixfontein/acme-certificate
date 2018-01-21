@@ -14,3 +14,6 @@
     aws_secret_key: "{{ aws_secret_key }}"
   run_once: True
   with_dict: "{{ lets_encrypt_challenge.get('challenge_data', {}) }}"
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs

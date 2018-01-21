@@ -5,3 +5,6 @@
     path: "{{ server_location }}/{{ item.value[challenge].resource[('.well-known/acme-challenge/'|length):] }}"
     state: absent
   with_dict: "{{ lets_encrypt_challenge.get('challenge_data', {}) }}"
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
