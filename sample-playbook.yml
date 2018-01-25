@@ -1,5 +1,5 @@
 ---
-- name: server setup
+- name: getting certificates for webserver
   hosts: webserver
   vars:
     acme_account: 'keys/letsencrypt-account.key'

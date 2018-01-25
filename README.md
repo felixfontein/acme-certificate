@@ -1,62 +1,57 @@
-# letsencrypt-ansible
+# letsencrypt
 
-This is an [Ansible](https://github.com/ansible/ansible) role which uses
-[Let's Encrypt](https://letsencrypt.org/) to issue free TLS/SSL certificates for your
-server. This role requires Ansible 2.2 or newer and is based on the new
-[letsencrypt module](https://docs.ansible.com/ansible/latest/letsencrypt_module.html)
-coming with Ansible.
+Allows to obtain certificates from Let's Encrypt with minimal interaction with the webserver. Most code is executed on the controller, and the account key is never send to the nodes.
 
-(If you prefer the [acme_compact](https://github.com/felixfontein/acme-compact) based
-version, you can check out the
-[acme_compact_version branch](https://github.com/felixfontein/letsencrypt-ansible/tree/acme_compact_version).)
+## Description
 
-The main advantage of this approach over others is that *almost no code is executed
-on your webserver*: only when you use HTTP challenges, files need to be copied onto
-your webserver, and afterwards deleted from it. Everything else is executed on your
-local machine!
+This is an [Ansible](https://github.com/ansible/ansible) role which uses [Let's Encrypt](https://letsencrypt.org/) to issue free TLS/SSL certificates for your server. This role requires Ansible 2.2 or newer and is based on the new [letsencrypt module](https://docs.ansible.com/ansible/latest/letsencrypt_module.html) coming with Ansible.
 
-(This does not cover installing the certificates, you have to do that yourself in
-another role.)
+(If you prefer the [acme_compact](https://github.com/felixfontein/acme-compact) based version, you can check out the [acme_compact_version branch](https://github.com/felixfontein/letsencrypt-ansible/tree/acme_compact_version).)
 
-The role uses a Python script (`certtool.py`) for convenience tasks with certificates,
-like creating account keys and Certificate Sign Requests (CSRs).
+The main advantage of this approach over others is that *almost no code is executed on your webserver*: only when you use HTTP challenges, files need to be copied onto your webserver, and afterwards deleted from it. Everything else is executed on your local machine!
 
-## Basic Usage
+(This does not cover installing the certificates, you have to do that yourself in another role.)
 
-See `sample-playbook.yml` for how to use this role. Please note that it assumes an
-account key has already been created (and is available at `keys/letsencrypt-account.key`).
-To create such a key, run
+The role uses a Python script (`certtool.py`) for convenience tasks with certificates, like creating account keys and Certificate Sign Requests (CSRs).
 
-    python roles/letsencrypt/code/certtool.py gen-account-key --account-key keys/letsencrypt-account.key
+## Requirements
 
-(You can adjust the path `keys/` by setting the variable `keys_path`.)
+Requires `openssl` installed on the controller. It must be available on the executable path.
 
-This code should work with Python 2 and Python 3, and requires OpenSSL's
-command line tool `openssl` in the path. Please note that this project is not well
-tested and audited, so please check the code intensively before using this in a
-production environment!
+If DNS challenges are used, there can be other requirements depending on the DNS provider. For example, for Amazon's Route 53, the Ansible `route53` module requires the Python `boto` package.
 
-## Account key conversion
+## Role Variables
 
-Note that this Ansible role expects the Let's Encrypt account key to be in PEM format
-and not in JWK format, which is used by the
-[official Let's Encrypt client certbot](https://github.com/letsencrypt/letsencrypt). If
-you have created an account key with the official client and now want to use this key
-with this ansible role, you have to convert it. One tool which can do this is
-[pem-jwk](https://github.com/dannycoates/pem-jwk).
+These are the main variables:
 
-## Integrate this role to your server's playbook
-
-The role supports HTTP and DNS challenges. The type of challenge can be selected
-by defining `challenge`. The default value is `http-01` for HTTP challenges.
+- `acme_account`: Path to the private ACME account key. Can be created by running `python code/certtool.py gen-account-key --account-key ../../keys/letsencrypt-account.key`. Must always be specified.
+- `acme_email`: Your email address which shall be associated to the ACME account. Must always be specified.
+- `algorithm`: The algorithm used for creating private keys. The default is `"rsa"`; other choices are `"p-256"`, `"p-384"` or `"p-521"` for the NIST elliptic curves `prime256v1`, `secp384r1` and `secp521r1`, respectively.
+- `key_length`: The bitlength to use for RSA private keys. The default is 4096.
+- `key_name`: The basename for storing the keys and certificates. The default is the first domain specified, with `*` replaced by `_`.
+- `keys_path`: Where the keys and certificates are stored. Default value is `"keys/"`.
+- `ocsp_must_staple`: Whether a certificate with the OCSP Must Staple extension is requested. Default value is `False`.
+- `agreement`: The terms of service document the user agrees to. Default value is `https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf`.
+- `acme_directory`: The ACME directory to use. Default is `https://acme-v01.api.letsencrypt.org/directory`, which is the current production ACME endpoint of Let's Encrypt.
+- `challenge`: The challenge type to use. Should be `http-01` for HTTP challenges (needs access to web server) or `dns-01` for DNS challenges (needs access to DNS provider).
+- `root_certificate`: The root certificate for the ACME directory. Default value is `https://letsencrypt.org/certs/isrgrootx1.pem` for the root certificate of Let's Encrypt.
+- `intermediate_certificate`: The intermediate certificate for the ACME directory. Default value is `https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem` for the currently used intermediate certificate of Let's Encrypt.
 
 ### HTTP Challenges
 
-In this section I'm assuming you use nginx. Similar setups can be made for other
-web servers.
+For HTTP challenges, the following variables define how the challenges can be put onto the (remote) webserver:
 
-Assume that for one of your TLS/SSL protected domains, you use a HTTP-to-HTTPS
-redirect. Let's assume it looks like this:
+- `server_location`: Location where `.well-known/acme-challenge/` will be served from. Default is `/var/www/challenges`.
+- `http_challenge_user`: The user the challenge files are owned by. Default value is `root`.
+- `http_challenge_group`: The group the challenge files are owned by. Default value is `http`.
+- `http_challenge_folder_mode`: The mode to use for the challenge folder. Default value is `0750` (octal).
+- `http_challenge_file_mode`: The mode to use for the challenge files. Default value is `0640` (octal).
+
+The following subsection shows how to configure [nginx](https://nginx.org/) for HTTP challenges. Configuring other webservers can be done in a similar way.
+
+#### Nginx configuration
+
+Assume that for one of your TLS/SSL protected domains, you use a HTTP-to-HTTPS redirect. Let's assume it looks like this:
 
     server {
         listen       example.com:80;
@@ -64,8 +59,7 @@ redirect. Let's assume it looks like this:
         return 301   https://www.example.com$request_uri;
     }
 
-To allow the `letsencrypt` role to put something at
-`http://*.example.com/.well-known/acme-challenge/`, you can change this to:
+To allow the `letsencrypt` role to put something at `http://*.example.com/.well-known/acme-challenge/`, you can change this to:
 
     server {
         listen       example.com:80;
@@ -79,18 +73,9 @@ To allow the `letsencrypt` role to put something at
         }
     }
 
-With this nginx config, all other URLs on `*.example.com` and `example.com` are still redirected,
-while everything in `*.example.com/.well-known/acme-challenge/` is served from `/var/www/challenges`.
+With this nginx config, all other URLs on `*.example.com` and `example.com` are still redirected, while everything in `*.example.com/.well-known/acme-challenge/` is served from `/var/www/challenges`. When adjusting the location of `/var/www/challenges`, you must also change `server_location`.
 
-For this to work, you must set `server_location` to `/var/www/challenges/` in your playbook. You
-can adjust the access rights, owner and group of the generated files and folders by defining
-`http_challenge_folder_mode`, `http_challenge_file_mode`, `http_challenge_user` and
-`http_challenge_group`. Per default, the files are owned by `root` with group `http`, and are
-readable only by owner and group.
-
-You can even improve on this by redirecting all URLs in `*.example.com/.well-known/acme-challenge/`
-which do not resolve to a valid file in `/var/www/challenges` to your HTTPS server as well. One way
-to do this is:
+You can even improve on this by redirecting all URLs in `*.example.com/.well-known/acme-challenge/` which do not resolve to a valid file in `/var/www/challenges` to your HTTPS server as well. One way to do this is:
 
     server {
         listen       example.com:80;
@@ -107,77 +92,41 @@ to do this is:
         }
     }
 
-With this config, if `/var/www/challenges/` is empty, your HTTP server will behave as if the
-`/.well-known/acme-challenge/` location isn't specified.
-
-If you have such a config, you can run `ansible-playbook sample-playbook.yml -t issue-tls-certs`
-or `ansible-playbook sample-playbook.yml -t issue-tls-certs-newkey` without any config change,
-and you will be issued new or renewed TLS/SSL certificates.
-
-If your setup is differently, you must adjust `roles/letsencrypt/http-*.yml` first. This in
-particular applies when you are using different users and/or access rights for your server.
+With this config, if `/var/www/challenges/` is empty, your HTTP server will behave as if the `/.well-known/acme-challenge/` location isn't specified.
 
 ### DNS Challenges
 
-**THIS IS HIGHLY EXPERIMENTAL; USE AT OWN RISK!**
+If DNS challenges are used, the following variables define how the challenges can be fulfilled:
 
-This role now also offers support for DNS challenges. Currently, three DNS providers are supported:
+- `dns_provider`: must be one of `route53`, `hosttech` or `gcdns`. Each needs more information:
+  - For `route53` (Amazon Route 53), the credentials must be passed as `aws_access_key` and `aws_secret_key`.
+  - For `hosttech` (hosttech GmbH, requires external [hosttech_dns module](https://github.com/felixfontein/ansible-hosttech)).
+  - For `gcdns` (Google Cloud DNS), the files `tasks/dns-gcdns-*.yml` need to be adjusted to add required credentials. See the documentation of the [gcdns_record module](https://docs.ansible.com/ansible/latest/gcdns_record_module.html).
 
-  * Amazon Route 53 (via the built-in [route53 module](http://docs.ansible.com/route53_module.html));
-  * Google Cloud DNS (via the built-in [gcdns_record module](https://docs.ansible.com/ansible/latest/gcdns_record_module.html));
-  * Hosttech DNS (via the external [hosttech_dns module](https://github.com/felixfontein/ansible-hosttech)).
+Please note that the DNS challenge code is experimental. The Route 53 and Hosttech functionality has been tested. Also, the code tries to extract the DNS zone from the domain by taking the last two components separated by dots. This will fail for example for `.co.uk` domains or other nested zones.
 
-You can add support for more DNS providers by adding `roles/letsencrypt/dns-PROVIDER-create.yml`
-and `roles/letsencrypt/dns-PROVIDER-cleanup.yml` files. Ansible modules of interest are
-[azure_rm_dnsrecordset](https://docs.ansible.com/ansible/latest/azure_rm_dnsrecordset_module.html) for Azure,
-[os_recordset](https://docs.ansible.com/ansible/latest/os_recordset_module.html) for OpenStack,
-[rax_dns_record](https://docs.ansible.com/ansible/latest/rax_dns_record_module.html) for RackSpace, and
-[udm_dns_record](https://docs.ansible.com/ansible/latest/udm_dns_record_module.html) for univention corporate servers (UCS).
+Support for more DNS providers can be added by adding `tasks/dns-NAME-create.yml` and `tasks/dns-NAME-cleanup.yml` files with similar content as in the existing files. Ansible modules of interest are [azure_rm_dnsrecordset](https://docs.ansible.com/ansible/latest/azure_rm_dnsrecordset_module.html) for Azure, [os_recordset](https://docs.ansible.com/ansible/latest/os_recordset_module.html) for OpenStack, [rax_dns_record](https://docs.ansible.com/ansible/latest/rax_dns_record_module.html) for RackSpace, and [udm_dns_record](https://docs.ansible.com/ansible/latest/udm_dns_record_module.html) for univention corporate servers (UCS).
 
-To use DNS challenges, you need to define more variables:
+## Account key conversion
 
-  * `challenge` must be set to `dns-01`;
-  * `dns_provider` must be set to one of `route53`, `gcdns` and `hosttech`;
-  * for Route 53, `aws_access_key` and `aws_secret_key` must be set;
-  * for Google Cloud DNS, authentication information must be provided by adjusting
-    `roles/letsencrypt/tasks/dns-gcdns-*.yml`; note that this has not yet been tested!
-  * for Hosttech, `hosttech_username` and `hosttech_password` must be set.
+Note that this Ansible role expects the Let's Encrypt account key to be in PEM format and not in JWK format, which is used by the [official Let's Encrypt client certbot](https://github.com/letsencrypt/letsencrypt). If you have created an account key with the official client and now want to use this key with this ansible role, you have to convert it. One tool which can do this is [pem-jwk](https://github.com/dannycoates/pem-jwk).
 
-Please note that the DNS challenge code is experimental. The Route 53 and Hosttech functionality
-has been tested, but not in a proper production environment.
+## Generated Files
 
-Also, the code tries to extract the DNS zone from the domain by taking the last two components
-separated by dots. This will fail for example for `.co.uk` domains or other nested zones.
+Let's assume you created TLS keys for `www.example.com`. You have to copy the relevant files to your webserver. The ansible role created the following files:
 
-## Using the generated files for webserver configuration
-
-Let's assume you created TLS keys for `www.example.com`. You have to copy the relevant files
-to your webserver. The ansible role created the following files:
-
-  * `keys/www.example.com.key`: this is the private key for the certificate. Ensure nobody can
-    access it.
+  * `keys/www.example.com.key`: this is the private key for the certificate. Ensure nobody can access it.
   * `keys/www.example.com.pem`: this is the certificate itself.
-  * `keys/www.example.com-chain.pem`: this is the intermediate certificate(s) needed for a trust
-    path.
-  * `keys/www.example.com.cnf`: this is an OpenSSL configuration file used to create the
-    Certificate Signing Request. You can safely delete it.
-  * `keys/www.example.com.csr`: this is the Certificate Signing Request used to obtain the
-    certificate. You can safely delete it.
-  * `keys/www.example.com-fullchain.pem`: this is the certificate combined with the intermediate
-    certificate(s).
-  * `keys/www.example.com-rootchain.pem`: this is the intermediate certificate(s) combined with
-    the root certificate. You might need this for OCSP stapling.
+  * `keys/www.example.com-chain.pem`: this is the intermediate certificate(s) needed for a trust path.
+  * `keys/www.example.com.cnf`: this is an OpenSSL configuration file used to create the Certificate Signing Request. You can safely delete it.
+  * `keys/www.example.com.csr`: this is the Certificate Signing Request used to obtain the certificate. You can safely delete it.
+  * `keys/www.example.com-fullchain.pem`: this is the certificate combined with the intermediate certificate(s).
+  * `keys/www.example.com-rootchain.pem`: this is the intermediate certificate(s) combined with the root certificate. You might need this for OCSP stapling.
   * `keys/www.example.com-root.pem`: this is the root certificate of Let's Encrypt.
 
-For configuring your webserver, you need the private key (`keys/www.example.com.key`), and
-either the certificate with intermediate certificate(s) combined in one file
-(`keys/www.example.com-fullchain.pem`), or the certificate and the intermediate certificate(s)
-as two separate files (`keys/www.example.com.pem` and `keys/www.example.com-chain.pem`). If you
-want to use [OCSP stapling](https://en.wikipedia.org/wiki/OCSP_stapling), you will also need
-`keys/www.example.com-rootchain.pem`.
+For configuring your webserver, you need the private key (`keys/www.example.com.key`), and either the certificate with intermediate certificate(s) combined in one file (`keys/www.example.com-fullchain.pem`), or the certificate and the intermediate certificate(s) as two separate files (`keys/www.example.com.pem` and `keys/www.example.com-chain.pem`). If you want to use [OCSP stapling](https://en.wikipedia.org/wiki/OCSP_stapling), you will also need `keys/www.example.com-rootchain.pem`.
 
-To get these files onto your web server, you should extend your ansible role for configuring
-the webserver to copy them. This could be done as follows:
+To get these files onto your web server, you could add tasks as follows:
 
     - name: copy private keys
       copy: src=keys/{{ item }} dest=/etc/ssl/private/ owner=root group=root mode=0400
@@ -251,3 +200,99 @@ The webserver configuration could look as follows (for nginx):
             index  index.html;
         }
     }
+
+## Dependencies
+
+This role doesn't depend on other roles.
+
+## Example Playbook
+
+This role can be used as follows. Note that it obtains several certificates, and defines variables used for all certificates globally:
+
+    ---
+    - name: getting certificates for webserver
+      hosts: webserver
+      vars:
+        acme_account: 'keys/letsencrypt-account.key'
+        acme_email: 'mail@example.com'
+        # For HTTP challenges:
+        server_location: '/var/www/challenges/'
+        http_challenge_user: root
+        http_challenge_group: http
+        http_challenge_folder_mode: "0750"
+        http_challenge_file_mode: "0640"
+        # For DNS challenges:
+        dns_provider: route53
+        aws_access_key: REPLACE_WITH_YOUR_ACCESS_KEY
+        aws_secret_key: REPLACE_WITH_YOUR_SECRET_KEY
+      roles:
+        - role: letsencrypt
+          domains: ['example.com', 'www.example.com']
+          # Use DNS challenges:
+          challenge: dns-01
+          # The certificate files will be stored at:
+          #    keys/example.com.key  (private key)
+          #    keys/example.com.csr  (certificate signing request)
+          #    keys/example.com.pem  (certificate)
+          #    keys/example.com.cnf  (OpenSSL config for CSR creation -- can be safely deleted)
+          #    keys/example.com-chain.pem  (intermediate certificate)
+          #    keys/example.com-fullchain.pem  (certificate with intermediate certificate)
+          #    keys/example.com-root.pem  (root certificate)
+          #    keys/example.com-rootchain.pem  (intermediate certificate with root certificate)
+        - role: letsencrypt
+          domains: ['another.example.com']
+          key_name: 'another.example.com-rsa'
+          key_length: 4096
+          # Use HTTP challenges:
+          challenge: http-01
+          # The certificate files will be stored at:
+          #    keys/another.example.com-rsa.key  (private key)
+          #    keys/another.example.com-rsa.csr  (certificate signing request)
+          #    keys/another.example.com-rsa.pem  (certificate)
+          #    keys/another.example.com-rsa.cnf  (OpenSSL config for CSR creation -- can be safely deleted)
+          #    keys/another.example.com-rsa-chain.pem  (intermediate certificate)
+          #    keys/another.example.com-rsa-fullchain.pem  (certificate with intermediate certificate)
+          #    keys/another.example.com-rsa-root.pem  (root certificate)
+          #    keys/another.example.com-rsa-rootchain.pem  (intermediate certificate with root certificate)
+        - role: letsencrypt
+          domains: ['another.example.com']
+          key_name: 'another.example.com-ecc'
+          algorithm: 'p-256'
+          # Use HTTP challenges (default for challenge is http-01).
+          # The certificate files will be stored at:
+          #    keys/another.example.com-ecc.key  (private key)
+          #    keys/another.example.com-ecc.csr  (certificate signing request)
+          #    keys/another.example.com-ecc.pem  (certificate)
+          #    keys/another.example.com-ecc.cnf  (OpenSSL config for CSR creation -- can be safely deleted)
+          #    keys/another.example.com-ecc-chain.pem  (intermediate certificate)
+          #    keys/another.example.com-ecc-fullchain.pem  (certificate with intermediate certificate)
+          #    keys/another.example.com-ecc-root.pem  (root certificate)
+          #    keys/another.example.com-ecc-rootchain.pem  (intermediate certificate with root certificate)
+
+## License
+
+The MIT License (MIT)
+
+Copyright (c) 2018 Felix Fontein
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+## Author Information
+
+The homepage for this role is https://github.com/felixfontein/letsencrypt-ansible/. Please use the issue tracker to report problems.
