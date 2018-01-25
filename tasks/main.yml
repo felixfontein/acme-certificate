@@ -54,10 +54,12 @@
     account_key: "{{ acme_account }}"
     csr: "{{ keys_path }}{{ key_name }}.csr"
     dest: "{{ keys_path }}{{ key_name }}.pem"
+    fullchain_dest: "{{ keys_path }}{{ key_name }}-fullchain.pem"
     account_email: "{{ acme_email }}"
-    agreement: "{{ agreement }}"
+    terms_agreed: "{{ terms_agreed }}"
     challenge: "{{ challenge }}"
     acme_directory: "{{ acme_directory }}"
+    acme_version: "{{ acme_version }}"
     remaining_days: 91
   run_once: True
   register: lets_encrypt_challenge
@@ -65,13 +67,18 @@
   - issue-tls-certs-newkey
   - issue-tls-certs
 
+- debug: msg="account URI: {{ lets_encrypt_challenge.account_uri }}; order URI: {{ lets_encrypt_challenge.order_uri }}"
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
+
 - block:
   # Set up HTTP challenges
-  - include: http-create.yml
+  - include_tasks: http-create.yml
     when: "challenge == 'http-01'"
 
   # Set up DNS challenges
-  - include: dns-{{ dns_provider }}-create.yml
+  - include_tasks: dns-{{ dns_provider }}-create.yml
     when: "challenge == 'dns-01'"
 
   - name: "Getting certificates for domains {{ ', '.join(domains) }}"
@@ -80,34 +87,29 @@
       account_key: "{{ acme_account }}"
       csr: "{{ keys_path }}{{ key_name }}.csr"
       dest: "{{ keys_path }}{{ key_name }}.pem"
+      fullchain_dest: "{{ keys_path }}{{ key_name }}-fullchain.pem"
       account_email: "{{ acme_email }}"
-      agreement: "{{ agreement }}"
+      terms_agreed: "{{ terms_agreed }}"
       challenge: "{{ challenge }}"
       acme_directory: "{{ acme_directory }}"
+      acme_version: "{{ acme_version }}"
       remaining_days: 91
       data: "{{ lets_encrypt_challenge }}"
     run_once: True
 
-  - name: "Creating chained certificate for domains {{ ', '.join(domains) }}"
-    local_action:
-      module: copy
-      dest: "{{ keys_path }}{{ key_name }}-fullchain.pem"
-      content: "{{ lookup('file', keys_path ~ key_name ~ '.pem') }}\n{{ lookup('file', keys_path ~ key_name ~ '-chain.pem') }}\n"
-    run_once: True
-
   always:
   # Clean up HTTP challenges
-  - include: http-cleanup.yml
+  - include_tasks: http-cleanup.yml
     when: "challenge == 'http-01'"
 
   # Clean up DNS challenges
-  - include: dns-{{ dns_provider }}-cleanup.yml
+  - include_tasks: dns-{{ dns_provider }}-cleanup.yml
     when: "challenge == 'dns-01'"
 
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
-  when: lets_encrypt_challenge|changed
+  when: lets_encrypt_challenge is changed
 
 - name: "Verifying certificate for domains {{ ', '.join(domains) }}"
   local_action:
