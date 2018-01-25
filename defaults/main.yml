@@ -11,7 +11,8 @@ challenge: http-01
 root_certificate: https://letsencrypt.org/certs/isrgrootx1.pem
 intermediate_certificate: https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
 
-# For http challenges:
+# For HTTP challenges:
+server_location: /var/www/challenges
 http_challenge_user: root
 http_challenge_group: http
 http_challenge_folder_mode: "0750"

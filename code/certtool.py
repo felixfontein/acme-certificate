@@ -78,8 +78,7 @@ ALGORITHMS = {
     'rsa': RSA(),
     'p-256': ECC('p-256', 'prime256v1', 256),
     'p-384': ECC('p-384', 'secp384r1', 384),
-    # 'p-521': ECC('p-521', 'secp521r1', 528),  -- P-521 isn't supported yet (on Let's Encrypt staging server);
-    #                                              see https://github.com/letsencrypt/boulder/issues/2217
+    'p-521': ECC('p-521', 'secp521r1', 528),
 }
 
 
