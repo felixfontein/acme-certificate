@@ -35,7 +35,6 @@ These are the main variables:
 - `acme_directory`: The ACME directory to use. Default is `https://acme-v01.api.letsencrypt.org/directory`, which is the current production ACME endpoint of Let's Encrypt.
 - `challenge`: The challenge type to use. Should be `http-01` for HTTP challenges (needs access to web server) or `dns-01` for DNS challenges (needs access to DNS provider).
 - `root_certificate`: The root certificate for the ACME directory. Default value is `https://letsencrypt.org/certs/isrgrootx1.pem` for the root certificate of Let's Encrypt.
-- `intermediate_certificate`: The intermediate certificate for the ACME directory. Default value is `https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem` for the currently used intermediate certificate of Let's Encrypt.
 
 ### HTTP Challenges
 

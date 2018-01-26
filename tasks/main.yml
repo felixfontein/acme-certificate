@@ -22,52 +22,38 @@
   - create-tls-keys
   - create-tls-csr
 
-- block:
-  - name: "Get root certificate for domains {{ ', '.join(domains) }}"
-    local_action:
-      module: get_url
-      url: "{{ root_certificate }}"
-      dest: "{{ keys_path }}{{ key_name }}-root.pem"
-    run_once: True
-
-  - name: "Get intermediate certificate for domains {{ ', '.join(domains) }}"
-    local_action:
-      module: get_url
-      url: "{{ intermediate_certificate }}"
-      dest: "{{ keys_path }}{{ key_name }}-chain.pem"
-    run_once: True
-
-  - name: "Form root chain for domains {{ ', '.join(domains) }}"
-    local_action:
-      module: copy
-      dest: "{{ keys_path }}{{ key_name }}-rootchain.pem"
-      content: "{{ lookup('file', keys_path ~ key_name ~ '-root.pem') }}\n{{ lookup('file', keys_path ~ key_name ~ '-chain.pem') }}\n"
-    run_once: True
-  tags:
-  - issue-tls-certs-newkey
-  - issue-tls-certs
-  - get-tls-chain
-
-- name: "Preparing challenges for domains {{ ', '.join(domains) }}"
+- name: "Get root certificate for domains {{ ', '.join(domains) }}"
   local_action:
-    module: letsencrypt
-    account_key: "{{ acme_account }}"
-    csr: "{{ keys_path }}{{ key_name }}.csr"
-    dest: "{{ keys_path }}{{ key_name }}.pem"
-    fullchain_dest: "{{ keys_path }}{{ key_name }}-fullchain.pem"
-    account_email: "{{ acme_email }}"
-    terms_agreed: "{{ terms_agreed }}"
-    challenge: "{{ challenge }}"
-    acme_directory: "{{ acme_directory }}"
-    acme_version: "{{ acme_version }}"
-    remaining_days: 91
+    module: get_url
+    url: "{{ root_certificate }}"
+    dest: "{{ keys_path }}{{ key_name }}-root.pem"
   run_once: True
-  register: lets_encrypt_challenge
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
 
-- debug: msg="account URI: {{ lets_encrypt_challenge.account_uri }}; order URI: {{ lets_encrypt_challenge.order_uri }}"
+- block:
+  - name: "Preparing challenges for domains {{ ', '.join(domains) }}"
+    local_action:
+      module: letsencrypt
+      account_key: "{{ acme_account }}"
+      csr: "{{ keys_path }}{{ key_name }}.csr"
+      dest: "{{ keys_path }}{{ key_name }}.pem"
+      fullchain_dest: "{{ keys_path }}{{ key_name }}-fullchain.pem"
+      chain_dest: "{{ keys_path }}{{ key_name }}-chain.pem"
+      account_email: "{{ acme_email }}"
+      terms_agreed: "{{ terms_agreed }}"
+      challenge: "{{ challenge }}"
+      acme_directory: "{{ acme_directory }}"
+      acme_version: "{{ acme_version }}"
+      remaining_days: 91
+    run_once: True
+    register: lets_encrypt_challenge
+
+  always:
+  - debug:
+      msg: "account URI: {{ lets_encrypt_challenge.get('account_uri') }}; order URI: {{ lets_encrypt_challenge.get('order_uri') }}"
+
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
@@ -88,6 +74,7 @@
       csr: "{{ keys_path }}{{ key_name }}.csr"
       dest: "{{ keys_path }}{{ key_name }}.pem"
       fullchain_dest: "{{ keys_path }}{{ key_name }}-fullchain.pem"
+      chain_dest: "{{ keys_path }}{{ key_name }}-chain.pem"
       account_email: "{{ acme_email }}"
       terms_agreed: "{{ terms_agreed }}"
       challenge: "{{ challenge }}"
@@ -97,6 +84,12 @@
       data: "{{ lets_encrypt_challenge }}"
     run_once: True
 
+  - name: "Form root chain for domains {{ ', '.join(domains) }}"
+    local_action:
+      module: copy
+      dest: "{{ keys_path }}{{ key_name }}-rootchain.pem"
+      content: "{{ lookup('file', keys_path ~ key_name ~ '-root.pem') }}\n{{ lookup('file', keys_path ~ key_name ~ '-chain.pem') }}\n"
+    run_once: True
   always:
   # Clean up HTTP challenges
   - include_tasks: http-cleanup.yml
