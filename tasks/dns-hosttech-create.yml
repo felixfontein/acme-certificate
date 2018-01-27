@@ -4,16 +4,16 @@
   local_action:
     module: hosttech_dns
     state: present
-    zone: "{{ item | regex_replace('^(?:.*\\.|)([^.]+\\.[^.]+)$', '\\1') }}"
-    record: "{{ item }}"
+    zone: "{{ item.key | regex_replace('^(?:.*\\.|)([^.]+\\.[^.]+)$', '\\1') }}"
+    record: "{{ item.key }}"
     type: TXT
     ttl: 300
-    value: "{{ lets_encrypt_challenge.challenge_data.items() | selectattr('1.dns-01.record', 'equalto', item) | map(attribute='1.dns-01.resource_value') | list }}"
+    value: "{{ item.value }}"
     overwrite: true
     hosttech_username: "{{ hosttech_username }}"
     hosttech_password: "{{ hosttech_password }}"
   run_once: True
-  with_items: "{{ lets_encrypt_challenge.challenge_data.values() | map(attribute='dns-01.record') | unique }}"
+  with_dict: "{{ lets_encrypt_challenge.challenge_data_dns }}"
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs

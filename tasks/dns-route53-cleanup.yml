@@ -4,16 +4,16 @@
   local_action:
     module: route53
     state: absent
-    zone: "{{ item | regex_replace('^(?:.*\\.|)([^.]+\\.[^.]+)$', '\\1') }}"
-    record: "{{ item }}"
+    zone: "{{ item.key | regex_replace('^(?:.*\\.|)([^.]+\\.[^.]+)$', '\\1') }}"
+    record: "{{ item.key }}"
     type: TXT
     ttl: 60
-    value: '"{{ lets_encrypt_challenge.challenge_data.items() | selectattr('1.dns-01.record', 'equalto', item) | map(attribute='1.dns-01.resource_value') | list }}"'
+    value: "{{ item.value | map('regex_replace', '^(.*)$', '\'\\1\'' ) | list }}"
     overwrite: true
     aws_access_key: "{{ aws_access_key }}"
     aws_secret_key: "{{ aws_secret_key }}"
   run_once: True
-  with_items: "{{ lets_encrypt_challenge.get('challenge_data', {}).values() | map(attribute='dns-01.record') | unique }}"
+  with_dict: "{{ lets_encrypt_challenge.get('challenge_data_dns', {}) }}"
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
