@@ -11,6 +11,8 @@ acme_version: 1
 #   acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory
 challenge: http-01
 root_certificate: https://letsencrypt.org/certs/isrgrootx1.pem
+# For staging, use:
+#   root_certificate: https://letsencrypt.org/certs/fakelerootx1.pem
 
 # For HTTP challenges:
 server_location: /var/www/challenges
