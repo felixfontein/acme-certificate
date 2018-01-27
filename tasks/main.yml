@@ -1,8 +1,23 @@
 ---
+- name: Ansible version check
+  assert:
+    that: "(ansible_version.major, ansible_version.minor) >= (2, 5)"
+    msg: "This version of the letsencrypt role must be used with Ansible 2.5 or later."
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
+  - create-tls-keys
+  - create-tls-csr
+
 - name: Sanity checks
-  fail:
+  assert:
+    that: "challenge != 'dns-01' or dns_provider is not undefined"
     msg: "dns_provider must be defined for dns-01 DNS challenge"
-  when: "challenge == 'dns-01' and dns_provider is undefined"
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
+  - create-tls-keys
+  - create-tls-csr
 
 - block:
   - name: "Creating private key for domains {{ ', '.join(domains) }}"
