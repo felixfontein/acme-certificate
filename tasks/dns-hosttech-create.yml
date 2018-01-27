@@ -1,6 +1,6 @@
 ---
 # Create DNS challenges for DNS provider HostTech
-- name: Creating challenge DNS entries for domains {{ ', '.join(domains) }}" via HostTech API
+- name: Creating challenge DNS entries for domains {{ ', '.join(domains) }} via HostTech API
   local_action:
     module: hosttech_dns
     state: present

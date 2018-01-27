@@ -1,6 +1,6 @@
 ---
 # Clean up DNS challenges for DNS provider Google Cloud DNS
-- name: Cleaning up challenge DNS entries for domains {{ ', '.join(domains) }}" via Google Cloud DNS
+- name: Cleaning up challenge DNS entries for domains {{ ', '.join(domains) }} via Google Cloud DNS
   local_action:
     module: gcdns_record
     state: absent

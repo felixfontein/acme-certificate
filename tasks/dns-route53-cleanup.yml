@@ -1,6 +1,6 @@
 ---
 # Clean up DNS challenges for DNS provider Amazon Route53
-- name: Cleaning up challenge DNS entries for domains {{ ', '.join(domains) }}" via Route53
+- name: Cleaning up challenge DNS entries for domains {{ ', '.join(domains) }} via Route53
   local_action:
     module: route53
     state: absent

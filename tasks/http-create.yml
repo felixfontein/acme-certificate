@@ -13,7 +13,7 @@
   - issue-tls-certs
 
 # Create challenge files on server.
-- name: Copying challenge files for domains {{ ', '.join(domains) }}"
+- name: "Copying challenge files for domains {{ ', '.join(domains) }}"
   copy:
     dest: "{{ server_location }}/{{ item.value[challenge].resource[('.well-known/acme-challenge/'|length):] }}"
     content: "{{ item.value[challenge].resource_value }}"

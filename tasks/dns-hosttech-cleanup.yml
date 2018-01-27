@@ -1,6 +1,6 @@
 ---
 # Clean up DNS challenges for DNS provider HostTech
-- name: Cleaning up challenge DNS entries for domains {{ ', '.join(domains) }}" via HostTech API
+- name: Cleaning up challenge DNS entries for domains {{ ', '.join(domains) }} via HostTech API
   local_action:
     module: hosttech_dns
     state: absent
