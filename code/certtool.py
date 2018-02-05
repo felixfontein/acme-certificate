@@ -7,6 +7,18 @@ import subprocess
 import sys
 import textwrap
 
+if not hasattr(textwrap, 'indent'):
+    # Monkey-patching for Python 2, whose textwrap has no indent() function:
+
+    def indent(text, prefix, predicate=None):
+        lines = text.splitlines(True)
+        if predicate:
+            return ''.join([prefix + line for line in lines if predicate(line)])
+        else:
+            return ''.join([prefix + line for line in lines])
+
+    textwrap.indent = indent
+
 
 # #####################################################################################################
 # # Helper functions
