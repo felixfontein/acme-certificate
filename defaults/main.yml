@@ -13,6 +13,7 @@ intermediate_certificate: https://letsencrypt.org/certs/lets-encrypt-x3-cross-si
 
 # For HTTP challenges:
 server_location: /var/www/challenges
+http_become: false
 http_challenge_user: root
 http_challenge_group: http
 http_challenge_folder_mode: "0750"

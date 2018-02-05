@@ -42,6 +42,7 @@ These are the main variables:
 For HTTP challenges, the following variables define how the challenges can be put onto the (remote) webserver:
 
 - `server_location`: Location where `.well-known/acme-challenge/` will be served from. Default is `/var/www/challenges`.
+- `http_become`: Argument for `become:` for the `file` and `copy` tasks. Default value is `false`.
 - `http_challenge_user`: The user the challenge files are owned by. Default value is `root`.
 - `http_challenge_group`: The group the challenge files are owned by. Default value is `http`.
 - `http_challenge_folder_mode`: The mode to use for the challenge folder. Default value is `0750` (octal).
