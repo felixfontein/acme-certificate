@@ -12,6 +12,7 @@
     overwrite: true
     aws_access_key: "{{ aws_access_key }}"
     aws_secret_key: "{{ aws_secret_key }}"
+    wait: true
   run_once: True
   with_dict: "{{ lets_encrypt_challenge.challenge_data }}"
   tags:
