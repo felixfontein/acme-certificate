@@ -4,11 +4,14 @@ key_name: "{{ domains[0].replace('*', '_') }}"
 keys_path: "keys/"
 ocsp_must_staple: False
 terms_agreed: true
-acme_directory: https://acme-v01.api.letsencrypt.org/directory
-acme_version: 1
+acme_directory: https://acme-v02.api.letsencrypt.org/directory
+acme_version: 2
+# For ACME v1:
+#   acme_directory: https://acme-v01.api.letsencrypt.org/directory
+#   acme_version: 1
 # For staging, use:
-#   acme_directory: https://acme-staging.api.letsencrypt.org/directory
-#   acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory
+#   acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory  (ACME v2)
+#   acme_directory: https://acme-staging.api.letsencrypt.org/directory  (ACME v1)
 challenge: http-01
 root_certificate: https://letsencrypt.org/certs/isrgrootx1.pem
 # For staging, use:

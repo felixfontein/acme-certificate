@@ -32,7 +32,8 @@ These are the main variables:
 - `keys_path`: Where the keys and certificates are stored. Default value is `"keys/"`.
 - `ocsp_must_staple`: Whether a certificate with the OCSP Must Staple extension is requested. Default value is `False`.
 - `agreement`: The terms of service document the user agrees to. Default value is `https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf`.
-- `acme_directory`: The ACME directory to use. Default is `https://acme-v01.api.letsencrypt.org/directory`, which is the current production ACME endpoint of Let's Encrypt.
+- `acme_directory`: The ACME directory to use. Default is `https://acme-v02.api.letsencrypt.org/directory`, which is the current production ACME v2 endpoint of Let's Encrypt.
+- `acme_version`: The ACME directory's version. Default is 2. Use 1 for ACME v1.
 - `challenge`: The challenge type to use. Should be `http-01` for HTTP challenges (needs access to web server) or `dns-01` for DNS challenges (needs access to DNS provider).
 - `root_certificate`: The root certificate for the ACME directory. Default value is `https://letsencrypt.org/certs/isrgrootx1.pem` for the root certificate of Let's Encrypt.
 
