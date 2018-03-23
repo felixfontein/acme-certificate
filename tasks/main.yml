@@ -1,8 +1,8 @@
 ---
 - name: Ansible version check
   assert:
-    that: "(ansible_version.major, ansible_version.minor) >= (2, 5)"
-    msg: "This version of the letsencrypt role must be used with Ansible 2.5 or later."
+    that: "ansible_version | version_compare(2.5.1, '>=')"
+    msg: "This version of the letsencrypt role must be used with Ansible 2.5.1 or later."
   run_once: True
   tags:
   - issue-tls-certs-newkey
