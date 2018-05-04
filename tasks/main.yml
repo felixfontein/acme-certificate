@@ -1,8 +1,25 @@
 ---
+- name: Ansible version check
+  assert:
+    that: "ansible_version | version_compare(2.5.1, '>=')"
+    msg: "This version of the letsencrypt role must be used with Ansible 2.5.1 or later."
+  run_once: True
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
+  - create-tls-keys
+  - create-tls-csr
+
 - name: Sanity checks
-  fail:
+  assert:
+    that: "challenge != 'dns-01' or dns_provider is not undefined"
     msg: "dns_provider must be defined for dns-01 DNS challenge"
-  when: "challenge == 'dns-01' and dns_provider is undefined"
+  run_once: True
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
+  - create-tls-keys
+  - create-tls-csr
 
 - block:
   - name: "Creating private key for domains {{ ', '.join(domains) }}"
@@ -22,56 +39,50 @@
   - create-tls-keys
   - create-tls-csr
 
-- block:
-  - name: "Get root certificate for domains {{ ', '.join(domains) }}"
-    local_action:
-      module: get_url
-      url: "{{ root_certificate }}"
-      dest: "{{ keys_path }}{{ key_name }}-root.pem"
-    run_once: True
-
-  - name: "Get intermediate certificate for domains {{ ', '.join(domains) }}"
-    local_action:
-      module: get_url
-      url: "{{ intermediate_certificate }}"
-      dest: "{{ keys_path }}{{ key_name }}-chain.pem"
-    run_once: True
-
-  - name: "Form root chain for domains {{ ', '.join(domains) }}"
-    local_action:
-      module: copy
-      dest: "{{ keys_path }}{{ key_name }}-rootchain.pem"
-      content: "{{ lookup('file', keys_path ~ key_name ~ '-root.pem') }}\n{{ lookup('file', keys_path ~ key_name ~ '-chain.pem') }}\n"
-    run_once: True
+- name: "Get root certificate for domains {{ ', '.join(domains) }}"
+  local_action:
+    module: get_url
+    url: "{{ root_certificate }}"
+    dest: "{{ keys_path }}{{ key_name }}-root.pem"
+  run_once: True
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
-  - get-tls-chain
 
-- name: "Preparing challenges for domains {{ ', '.join(domains) }}"
-  local_action:
-    module: letsencrypt
-    account_key: "{{ acme_account }}"
-    csr: "{{ keys_path }}{{ key_name }}.csr"
-    dest: "{{ keys_path }}{{ key_name }}.pem"
-    account_email: "{{ acme_email }}"
-    agreement: "{{ agreement }}"
-    challenge: "{{ challenge }}"
-    acme_directory: "{{ acme_directory }}"
-    remaining_days: 91
-  run_once: True
-  register: lets_encrypt_challenge
+- block:
+  - name: "Preparing challenges for domains {{ ', '.join(domains) }}"
+    local_action:
+      module: letsencrypt
+      account_key: "{{ acme_account }}"
+      csr: "{{ keys_path }}{{ key_name }}.csr"
+      dest: "{{ keys_path }}{{ key_name }}.pem"
+      fullchain_dest: "{{ keys_path }}{{ key_name }}-fullchain.pem"
+      chain_dest: "{{ keys_path }}{{ key_name }}-chain.pem"
+      account_email: "{{ acme_email }}"
+      terms_agreed: "{{ terms_agreed }}"
+      challenge: "{{ challenge }}"
+      acme_directory: "{{ acme_directory }}"
+      acme_version: "{{ acme_version }}"
+      remaining_days: 91
+    run_once: True
+    register: lets_encrypt_challenge
+
+  always:
+  - debug:
+      msg: "account URI: {{ lets_encrypt_challenge.get('account_uri') }}; order URI: {{ lets_encrypt_challenge.get('order_uri') }}"
+    run_once: True
+
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
 
 - block:
   # Set up HTTP challenges
-  - include: http-create.yml
+  - include_tasks: http-create.yml
     when: "challenge == 'http-01'"
 
   # Set up DNS challenges
-  - include: dns-{{ dns_provider }}-create.yml
+  - include_tasks: dns-{{ dns_provider }}-create.yml
     when: "challenge == 'dns-01'"
 
   - name: "Getting certificates for domains {{ ', '.join(domains) }}"
@@ -80,34 +91,36 @@
       account_key: "{{ acme_account }}"
       csr: "{{ keys_path }}{{ key_name }}.csr"
       dest: "{{ keys_path }}{{ key_name }}.pem"
+      fullchain_dest: "{{ keys_path }}{{ key_name }}-fullchain.pem"
+      chain_dest: "{{ keys_path }}{{ key_name }}-chain.pem"
       account_email: "{{ acme_email }}"
-      agreement: "{{ agreement }}"
+      terms_agreed: "{{ terms_agreed }}"
       challenge: "{{ challenge }}"
       acme_directory: "{{ acme_directory }}"
+      acme_version: "{{ acme_version }}"
       remaining_days: 91
       data: "{{ lets_encrypt_challenge }}"
     run_once: True
 
-  - name: "Creating chained certificate for domains {{ ', '.join(domains) }}"
+  - name: "Form root chain for domains {{ ', '.join(domains) }}"
     local_action:
       module: copy
-      dest: "{{ keys_path }}{{ key_name }}-fullchain.pem"
-      content: "{{ lookup('file', keys_path ~ key_name ~ '.pem') }}\n{{ lookup('file', keys_path ~ key_name ~ '-chain.pem') }}\n"
+      dest: "{{ keys_path }}{{ key_name }}-rootchain.pem"
+      content: "{{ lookup('file', keys_path ~ key_name ~ '-root.pem') }}\n{{ lookup('file', keys_path ~ key_name ~ '-chain.pem') }}\n"
     run_once: True
-
   always:
   # Clean up HTTP challenges
-  - include: http-cleanup.yml
+  - include_tasks: http-cleanup.yml
     when: "challenge == 'http-01'"
 
   # Clean up DNS challenges
-  - include: dns-{{ dns_provider }}-cleanup.yml
+  - include_tasks: dns-{{ dns_provider }}-cleanup.yml
     when: "challenge == 'dns-01'"
 
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
-  when: lets_encrypt_challenge|changed
+  when: lets_encrypt_challenge is changed
 
 - name: "Verifying certificate for domains {{ ', '.join(domains) }}"
   local_action:

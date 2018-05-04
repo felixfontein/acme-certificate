@@ -3,13 +3,19 @@ key_length: 4096
 key_name: "{{ domains[0].replace('*', '_') }}"
 keys_path: "keys/"
 ocsp_must_staple: False
-agreement: https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf
-acme_directory: https://acme-v01.api.letsencrypt.org/directory
+terms_agreed: true
+acme_directory: https://acme-v02.api.letsencrypt.org/directory
+acme_version: 2
+# For ACME v1:
+#   acme_directory: https://acme-v01.api.letsencrypt.org/directory
+#   acme_version: 1
 # For staging, use:
-#   acme_directory: https://acme-staging.api.letsencrypt.org/directory
+#   acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory  (ACME v2)
+#   acme_directory: https://acme-staging.api.letsencrypt.org/directory  (ACME v1)
 challenge: http-01
 root_certificate: https://letsencrypt.org/certs/isrgrootx1.pem
-intermediate_certificate: https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
+# For staging, use:
+#   root_certificate: https://letsencrypt.org/certs/fakelerootx1.pem
 
 # For HTTP challenges:
 server_location: /var/www/challenges
