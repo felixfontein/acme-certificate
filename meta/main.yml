@@ -10,6 +10,7 @@ galaxy_info:
   min_ansible_version: 2.5
 
   galaxy_tags:
+  - acme
   - letsencrypt
   - ssl
   - tls

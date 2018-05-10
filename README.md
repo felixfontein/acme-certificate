@@ -1,10 +1,10 @@
-# letsencrypt
+# acme-certificate
 
 Allows to obtain certificates from Let's Encrypt with minimal interaction with the webserver. Most code is executed on the controller, and the account key is never send to the nodes.
 
 ## Description
 
-This is an [Ansible](https://github.com/ansible/ansible) role which uses [Let's Encrypt](https://letsencrypt.org/) to issue free TLS/SSL certificates for your server. This role requires Ansible 2.2 or newer and is based on the new [letsencrypt module](https://docs.ansible.com/ansible/latest/letsencrypt_module.html) coming with Ansible.
+This is an [Ansible](https://github.com/ansible/ansible) role which can use any CA supporting the ACME protocol, such as [Let's Encrypt](https://letsencrypt.org/), to issue TLS/SSL certificates for your server. This role requires Ansible 2.5.1 or newer and is based on the new [letsencrypt module](https://docs.ansible.com/ansible/latest/letsencrypt_module.html) coming with Ansible.
 
 (If you prefer the [acme_compact](https://github.com/felixfontein/acme-compact) based version, you can check out the [acme_compact_version branch](https://github.com/felixfontein/letsencrypt-ansible/tree/acme_compact_version).)
 
@@ -24,7 +24,7 @@ If DNS challenges are used, there can be other requirements depending on the DNS
 
 These are the main variables:
 
-- `acme_account`: Path to the private ACME account key. Can be created by running `python code/certtool.py gen-account-key --account-key ../../keys/letsencrypt-account.key`. Must always be specified.
+- `acme_account`: Path to the private ACME account key. Can be created by running `python code/certtool.py gen-account-key --account-key ../../keys/acme-account.key`. Must always be specified.
 - `acme_email`: Your email address which shall be associated to the ACME account. Must always be specified.
 - `algorithm`: The algorithm used for creating private keys. The default is `"rsa"`; other choices are `"p-256"`, `"p-384"` or `"p-521"` for the NIST elliptic curves `prime256v1`, `secp384r1` and `secp521r1`, respectively.
 - `key_length`: The bitlength to use for RSA private keys. The default is 4096.
@@ -60,7 +60,7 @@ Assume that for one of your TLS/SSL protected domains, you use a HTTP-to-HTTPS r
         return 301   https://www.example.com$request_uri;
     }
 
-To allow the `letsencrypt` role to put something at `http://*.example.com/.well-known/acme-challenge/`, you can change this to:
+To allow the `acme-certificate` role to put something at `http://*.example.com/.well-known/acme-challenge/`, you can change this to:
 
     server {
         listen       example.com:80;
@@ -110,7 +110,7 @@ Support for more DNS providers can be added by adding `tasks/dns-NAME-create.yml
 
 ## Account key conversion
 
-Note that this Ansible role expects the Let's Encrypt account key to be in PEM format and not in JWK format, which is used by the [official Let's Encrypt client certbot](https://github.com/letsencrypt/letsencrypt). If you have created an account key with the official client and now want to use this key with this ansible role, you have to convert it. One tool which can do this is [pem-jwk](https://github.com/dannycoates/pem-jwk).
+Note that this Ansible role expects the Let's Encrypt account key to be in PEM format and not in JWK format, which is used by the [official Let's Encrypt client certbot](https://github.com/certbot/certbot). If you have created an account key with the official client and now want to use this key with this ansible role, you have to convert it. One tool which can do this is [pem-jwk](https://github.com/dannycoates/pem-jwk).
 
 ## Generated Files
 
@@ -214,7 +214,7 @@ This role can be used as follows. Note that it obtains several certificates, and
     - name: getting certificates for webserver
       hosts: webserver
       vars:
-        acme_account: 'keys/letsencrypt-account.key'
+        acme_account: 'keys/acme-account.key'
         acme_email: 'mail@example.com'
         # For HTTP challenges:
         server_location: '/var/www/challenges/'
@@ -227,7 +227,7 @@ This role can be used as follows. Note that it obtains several certificates, and
         aws_access_key: REPLACE_WITH_YOUR_ACCESS_KEY
         aws_secret_key: REPLACE_WITH_YOUR_SECRET_KEY
       roles:
-        - role: letsencrypt
+        - role: acme-certificate
           domains: ['example.com', 'www.example.com']
           # Use DNS challenges:
           challenge: dns-01
@@ -240,7 +240,7 @@ This role can be used as follows. Note that it obtains several certificates, and
           #    keys/example.com-fullchain.pem  (certificate with intermediate certificate)
           #    keys/example.com-root.pem  (root certificate)
           #    keys/example.com-rootchain.pem  (intermediate certificate with root certificate)
-        - role: letsencrypt
+        - role: acme-certificate
           domains: ['another.example.com']
           key_name: 'another.example.com-rsa'
           key_length: 4096
@@ -255,7 +255,7 @@ This role can be used as follows. Note that it obtains several certificates, and
           #    keys/another.example.com-rsa-fullchain.pem  (certificate with intermediate certificate)
           #    keys/another.example.com-rsa-root.pem  (root certificate)
           #    keys/another.example.com-rsa-rootchain.pem  (intermediate certificate with root certificate)
-        - role: letsencrypt
+        - role: acme-certificate
           domains: ['another.example.com']
           key_name: 'another.example.com-ecc'
           algorithm: 'p-256'

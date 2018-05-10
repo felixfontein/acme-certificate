@@ -2,7 +2,7 @@
 - name: getting certificates for webserver
   hosts: webserver
   vars:
-    acme_account: 'keys/letsencrypt-account.key'
+    acme_account: 'keys/acme-account.key'
     acme_email: 'mail@example.com'
     # For HTTP challenges:
     server_location: '/var/www/challenges/'
@@ -15,7 +15,7 @@
     aws_access_key: REPLACE_WITH_YOUR_ACCESS_KEY
     aws_secret_key: REPLACE_WITH_YOUR_SECRET_KEY
   roles:
-    - role: letsencrypt
+    - role: acme-certificate
       domains: ['example.com', 'www.example.com']
       # Use DNS challenges:
       challenge: dns-01
@@ -28,7 +28,7 @@
       #    keys/example.com-fullchain.pem  (certificate with intermediate certificate)
       #    keys/example.com-root.pem  (root certificate)
       #    keys/example.com-rootchain.pem  (intermediate certificate with root certificate)
-    - role: letsencrypt
+    - role: acme-certificate
       domains: ['another.example.com']
       key_name: 'another.example.com-rsa'
       key_length: 4096
@@ -43,7 +43,7 @@
       #    keys/another.example.com-rsa-fullchain.pem  (certificate with intermediate certificate)
       #    keys/another.example.com-rsa-root.pem  (root certificate)
       #    keys/another.example.com-rsa-rootchain.pem  (intermediate certificate with root certificate)
-    - role: letsencrypt
+    - role: acme-certificate
       domains: ['another.example.com']
       key_name: 'another.example.com-ecc'
       algorithm: 'p-256'
