@@ -1,8 +1,8 @@
 ---
 - name: Ansible version check
   assert:
-    that: "ansible_version.string | version_compare('2.5.1', '>=')"
-    msg: "This version of the acme-certificate role must be used with Ansible 2.5.1 or later."
+    that: "ansible_version.string | version_compare('2.6.0', '>=')"
+    msg: "This version of the acme-certificate role must be used with Ansible 2.6.0 or later."
   run_once: True
   tags:
   - issue-tls-certs-newkey
@@ -72,7 +72,7 @@
 - block:
   - name: "Preparing challenges for domains {{ ', '.join(domains) }}"
     local_action:
-      module: letsencrypt
+      module: acme_certificate
       account_key: "{{ acme_account }}"
       csr: "{{ keys_path }}{{ key_name }}.csr"
       dest: "{{ keys_path }}{{ key_name }}.pem"
@@ -107,7 +107,7 @@
 
   - name: "Getting certificates for domains {{ ', '.join(domains) }}"
     local_action:
-      module: letsencrypt
+      module: acme_certificate
       account_key: "{{ acme_account }}"
       csr: "{{ keys_path }}{{ key_name }}.csr"
       dest: "{{ keys_path }}{{ key_name }}.pem"
@@ -120,6 +120,7 @@
       acme_version: "{{ acme_version }}"
       remaining_days: 91
       data: "{{ lets_encrypt_challenge }}"
+      deactivate_authzs: true
     run_once: True
 
   - name: "Form root chain for domains {{ ', '.join(domains) }}"
