@@ -101,7 +101,7 @@ If DNS challenges are used, the following variables define how the challenges ca
 
 - `dns_provider`: must be one of `route53`, `hosttech` or `gcdns`. Each needs more information:
   - For `route53` (Amazon Route 53), the credentials must be passed as `aws_access_key` and `aws_secret_key`.
-  - For `hosttech` (hosttech GmbH, requires external [hosttech_dns module](https://github.com/felixfontein/ansible-hosttech)).
+  - For `hosttech` (hosttech GmbH, requires external [hosttech_dns_record module](https://github.com/felixfontein/ansible-hosttech)).
   - For `gcdns` (Google Cloud DNS), the files `tasks/dns-gcdns-*.yml` need to be adjusted to add required credentials. See the documentation of the [gcdns_record module](https://docs.ansible.com/ansible/latest/gcdns_record_module.html).
 
 Please note that the DNS challenge code is experimental. The Route 53 and Hosttech functionality has been tested. Also, the code tries to extract the DNS zone from the domain by taking the last two components separated by dots. This will fail for example for `.co.uk` domains or other nested zones.
