@@ -6,7 +6,7 @@ Allows to obtain certificates from Let's Encrypt with minimal interaction with t
 
 This is an [Ansible](https://github.com/ansible/ansible) role which can use any CA supporting the ACME protocol, such as [Let's Encrypt](https://letsencrypt.org/), to issue TLS/SSL certificates for your server. This role requires Ansible 2.5.1 or newer and is based on the new [letsencrypt module](https://docs.ansible.com/ansible/latest/letsencrypt_module.html) coming with Ansible.
 
-(If you prefer the [acme_compact](https://github.com/felixfontein/acme-compact) based version, you can check out the [acme_compact_version branch](https://github.com/felixfontein/letsencrypt-ansible/tree/acme_compact_version).)
+(If you prefer the [acme_compact](https://github.com/felixfontein/acme-compact) based version, you can check out the [acme_compact_version branch](https://github.com/felixfontein/acme-certificate/tree/acme_compact_version).)
 
 The main advantage of this approach over others is that *almost no code is executed on your webserver*: only when you use HTTP challenges, files need to be copied onto your webserver, and afterwards deleted from it. Everything else is executed on your local machine!
 
@@ -296,4 +296,4 @@ SOFTWARE.
 
 ## Author Information
 
-The homepage for this role is https://github.com/felixfontein/letsencrypt-ansible/. Please use the issue tracker to report problems.
+The homepage for this role is https://github.com/felixfontein/acme-certificate/. Please use the issue tracker to report problems.
