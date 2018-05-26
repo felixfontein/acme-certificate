@@ -39,6 +39,8 @@ These are the main variables:
 - `acme_version`: The ACME directory's version. Default is 2. Use 1 for ACME v1.
 - `challenge`: The challenge type to use. Should be `http-01` for HTTP challenges (needs access to web server) or `dns-01` for DNS challenges (needs access to DNS provider).
 - `root_certificate`: The root certificate for the ACME directory. Default value is `https://letsencrypt.org/certs/isrgrootx1.pem` for the root certificate of Let's Encrypt.
+- `deactivate_authzs`: Whether `authz`s (authorizations) should be deactivated afterwards. Default value is `true`. Set to `false` to be able to re-use `authz`s.
+- `modify_account`: Whether the ACME account should be created (if it doesn't exist) and the contact data (email address) should be updated. Default value is `true`. Set to `false` if you want to use the `acme_account` module to manage your ACME account.
 
 ### HTTP Challenges
 

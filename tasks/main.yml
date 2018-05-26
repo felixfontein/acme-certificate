@@ -74,6 +74,7 @@
     local_action:
       module: acme_certificate
       account_key: "{{ acme_account }}"
+      modify_account: "{{ modify_account }}"
       csr: "{{ keys_path }}{{ key_name }}.csr"
       dest: "{{ keys_path }}{{ key_name }}.pem"
       fullchain_dest: "{{ keys_path }}{{ key_name }}-fullchain.pem"
@@ -109,6 +110,7 @@
     local_action:
       module: acme_certificate
       account_key: "{{ acme_account }}"
+      modify_account: "{{ modify_account }}"
       csr: "{{ keys_path }}{{ key_name }}.csr"
       dest: "{{ keys_path }}{{ key_name }}.pem"
       fullchain_dest: "{{ keys_path }}{{ key_name }}-fullchain.pem"
@@ -120,7 +122,7 @@
       acme_version: "{{ acme_version }}"
       remaining_days: 91
       data: "{{ lets_encrypt_challenge }}"
-      deactivate_authzs: true
+      deactivate_authzs: "{{ deactivate_authzs }}"
     run_once: True
 
   - name: "Form root chain for domains {{ ', '.join(domains) }}"
