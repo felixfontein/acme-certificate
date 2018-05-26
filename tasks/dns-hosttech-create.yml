@@ -17,3 +17,7 @@
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
+
+- name: Wait for DNS entries to propagate
+  pause:
+    seconds: 10
