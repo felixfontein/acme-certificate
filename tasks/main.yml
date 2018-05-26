@@ -1,7 +1,7 @@
 ---
 - name: Ansible version check
   assert:
-    that: "ansible_version | version_compare('2.5.1', '>=')"
+    that: "ansible_version.string | version_compare('2.5.1', '>=')"
     msg: "This version of the acme-certificate role must be used with Ansible 2.5.1 or later."
   run_once: True
   tags:
