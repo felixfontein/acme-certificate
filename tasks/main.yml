@@ -84,7 +84,7 @@
       challenge: "{{ challenge }}"
       acme_directory: "{{ acme_directory }}"
       acme_version: "{{ acme_version }}"
-      remaining_days: 91
+      force: yes
     run_once: True
     register: lets_encrypt_challenge
 
@@ -120,7 +120,7 @@
       challenge: "{{ challenge }}"
       acme_directory: "{{ acme_directory }}"
       acme_version: "{{ acme_version }}"
-      remaining_days: 91
+      force: yes
       data: "{{ lets_encrypt_challenge }}"
       deactivate_authzs: "{{ deactivate_authzs }}"
     run_once: True
