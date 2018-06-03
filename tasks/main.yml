@@ -85,6 +85,7 @@
       acme_directory: "{{ acme_directory }}"
       acme_version: "{{ acme_version }}"
       force: yes
+      validate_certs: "{{ validate_certs }}"
     run_once: True
     register: lets_encrypt_challenge
 
@@ -123,6 +124,7 @@
       force: yes
       data: "{{ lets_encrypt_challenge }}"
       deactivate_authzs: "{{ deactivate_authzs }}"
+      validate_certs: "{{ validate_certs }}"
     run_once: True
 
   - name: "Form root chain for domains {{ ', '.join(domains) }}"
