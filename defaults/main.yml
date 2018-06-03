@@ -29,3 +29,4 @@ http_challenge_folder_mode: "0750"
 http_challenge_file_mode: "0640"
 deactivate_authzs: true
 modify_account: true
+verify_certs: true

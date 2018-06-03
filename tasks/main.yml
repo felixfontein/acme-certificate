@@ -151,6 +151,7 @@
     _raw_params: openssl verify -CAfile "{{ keys_path }}{{ key_name }}-root.pem" -untrusted "{{ keys_path }}{{ key_name }}-chain.pem" "{{ keys_path }}{{ key_name }}.pem"
   changed_when: False
   run_once: True
+  ignore_errors: "{{ not verify_certs }}"
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
