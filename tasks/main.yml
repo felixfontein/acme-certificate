@@ -7,8 +7,6 @@
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
-  - create-tls-keys
-  - create-tls-csr
 
 - name: Sanity checks
   assert:
@@ -18,8 +16,6 @@
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
-  - create-tls-keys
-  - create-tls-csr
 
 - block:
   - name: "Creating private key for domains {{ ', '.join(domains) }}"
@@ -27,7 +23,6 @@
     run_once: True
   tags:
   - issue-tls-certs-newkey
-  - create-tls-keys
 
 - block:
   - name: "Creating CSR for domains {{ ', '.join(domains) }}"
@@ -36,8 +31,6 @@
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
-  - create-tls-keys
-  - create-tls-csr
 
 - name: "Get root certificate for domains {{ ', '.join(domains) }}"
   local_action:
