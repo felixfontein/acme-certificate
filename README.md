@@ -30,7 +30,10 @@ These are the main variables:
 - `key_length`: The bitlength to use for RSA private keys. The default is 4096.
 - `key_name`: The basename for storing the keys and certificates. The default is the first domain specified, with `*` replaced by `_`.
 - `keys_path`: Where the keys and certificates are stored. Default value is `"keys/"`.
-- `ocsp_must_staple`: Whether a certificate with the OCSP Must Staple extension is requested. Default value is `False`.
+- `keys_old_path`: Where old keys and certificates should be copied to; used in case `keys_old_store` is true. Default value is `"keys/old/"`.
+- `keys_old_store`: If set to `true`, will make copies of old keys and certificates. The copies will be stored in the directory specified by `keys_old_store`. Default value is `false`.
+- `keys_old_prepend_timestamp`: Whether copies of old keys and certificates should be prepended by the current date and time. Default value is `false`.
+- `ocsp_must_staple`: Whether a certificate with the OCSP Must Staple extension is requested. Default value is `false`.
 - `agreement`: The terms of service document the user agrees to. Default value is `https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf`.
 - `acme_directory`: The ACME directory to use. Default is `https://acme-v02.api.letsencrypt.org/directory`, which is the current production ACME v2 endpoint of Let's Encrypt.
 - `acme_version`: The ACME directory's version. Default is 2. Use 1 for ACME v1.

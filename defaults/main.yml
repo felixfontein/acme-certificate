@@ -2,7 +2,10 @@ algorithm: "rsa"
 key_length: 4096
 key_name: "{{ domains[0].replace('*', '_') }}"
 keys_path: "keys/"
-ocsp_must_staple: False
+keys_old_path: "keys/old/"
+keys_old_store: false
+keys_old_prepend_timestamp: false
+ocsp_must_staple: false
 terms_agreed: true
 acme_directory: https://acme-v02.api.letsencrypt.org/directory
 acme_version: 2

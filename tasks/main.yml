@@ -18,6 +18,33 @@
   - issue-tls-certs
 
 - block:
+  - name: "Test whether old certificate files for domains {{ ', '.join(domains) }} exist"
+    local_action:
+      module: stat
+      path: "{{ keys_path }}/{{ key_name }}.pem"
+    register: old_certificate_exists
+    when: "keys_old_store"
+    run_once: True
+
+  - name: "Copying old certificate files for domains {{ ', '.join(domains) }}"
+    local_action:
+      module: copy
+      src: "{{ keys_path }}/{{ key_name }}{{ item }}"
+      dest: "{{ keys_old_path }}/{{ (ansible_date_time.date ~ '-' ~ ansible_date_time.hour ~ ansible_date_time.minute ~ ansible_date_time.second ~ ' ') if keys_old_prepend_timestamp else '' }}{{ key_name }}{{ item }}"
+    with_items:
+    - "-chain.pem"
+    - "-fullchain.pem"
+    - "-rootchain.pem"
+    - "-root.pem"
+    - ".key"
+    - ".pem"
+    when: "keys_old_store and old_certificate_exists.stat.exists"
+    run_once: True
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
+
+- block:
   - name: "Creating private key for domains {{ ', '.join(domains) }}"
     local_action: command python {{ role_path }}/code/certtool.py gen-key --key "{{ keys_path }}{{ key_name }}.key" --algorithm {{ algorithm }} --key-length {{ key_length }}
     run_once: True
