@@ -30,7 +30,7 @@
     local_action:
       module: copy
       src: "{{ keys_path }}/{{ key_name }}{{ item }}"
-      dest: "{{ keys_old_path }}/{{ (ansible_date_time.date ~ '-' ~ ansible_date_time.hour ~ ansible_date_time.minute ~ ansible_date_time.second ~ ' ') if keys_old_prepend_timestamp else '' }}{{ key_name }}{{ item }}"
+      dest: "{{ keys_old_path }}/{{ (ansible_date_time.date ~ '-' ~ ansible_date_time.hour ~ ansible_date_time.minute ~ ansible_date_time.second ~ '-') if keys_old_prepend_timestamp else '' }}{{ key_name }}{{ item }}"
     with_items:
     - "-chain.pem"
     - "-fullchain.pem"
