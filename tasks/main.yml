@@ -72,7 +72,7 @@
       mode: "{{ privatekey_mode }}"
       type: ECC
       curve: >-
-        {{ 'secp256k1' if algorithm == 'p-256' else
+        {{ 'secp256r1' if algorithm == 'p-256' else
            'secp384r1' if algorithm == 'p-384' else
            'secp521r1' if algorithm == 'p-521' else
            'invalid value for algorithm!' }}
