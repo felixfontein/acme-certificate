@@ -4,7 +4,7 @@ Allows to obtain certificates from Let's Encrypt with minimal interaction with t
 
 ## Description
 
-This is an [Ansible](https://github.com/ansible/ansible) role which can use any CA supporting the ACME protocol, such as [Let's Encrypt](https://letsencrypt.org/), to issue TLS/SSL certificates for your server. This role requires Ansible 2.6.0 or newer and is based on the [acme_certificate module](https://docs.ansible.com/ansible/latest/acme_certificate_module.html) coming with Ansible.
+This is an [Ansible](https://github.com/ansible/ansible) role which can use any CA supporting the ACME protocol, such as [Let's Encrypt](https://letsencrypt.org/), to issue TLS/SSL certificates for your server. This role requires Ansible 2.8.0 or newer and is based on the [acme_certificate module](https://docs.ansible.com/ansible/latest/acme_certificate_module.html) coming with Ansible.
 
 (If you prefer the [acme_compact](https://github.com/felixfontein/acme-compact) based version, you can check out the [acme_compact_version branch](https://github.com/felixfontein/acme-certificate/tree/acme_compact_version).)
 
@@ -12,19 +12,50 @@ The main advantage of this approach over others is that *almost no code is execu
 
 (This does not cover installing the certificates, you have to do that yourself in another role.)
 
-The role uses a Python script (`certtool.py`) for convenience tasks with certificates, like creating account keys and Certificate Sign Requests (CSRs).
-
 ## Requirements
 
-Requires `openssl` installed on the controller. It must be available on the executable path.
+Requires the Python [cryptography](https://github.com/ansible/ansible/pull/49568) library installed on the controller, available to the Python version used to execute the playbook. If `cryptography` is not installed, a recent enough version of [PyOpenSSL](https://pypi.org/project/pyOpenSSL/) is currently supported as a fallback by the Ansible `openssl_privatekey` and `openssl_csr` modules.
+
+The `openssl` binary must also be available in the executable path on the controller. It is needed by the `acme_certificate` module in case `cryptography` is not installed, and it is used for certificate chain validation.
 
 If DNS challenges are used, there can be other requirements depending on the DNS provider. For example, for Amazon's Route 53, the Ansible `route53` module requires the Python `boto` package.
+
+## Account Key Setup
+
+You can create an account key using the `openssl` binary as follows:
+
+    # RSA 4096 bit key
+    openssl genrsa 4096 -out keys/acme-account.key
+    # ECC 256 bit key (P-256)
+    openssl ecparam -name prime256v1 -genkey -out keys/acme-account.key
+    # ECC 384 bit key (P-384)
+    openssl ecparam -name secp384r1 -genkey -out keys/acme-account.key
+
+With Ansible, you can use the `openssl_privatekey` module as follows:
+
+    - name: Generate RSA 4096 key
+      openssl_privatekey:
+        path: keys/acme-account.key
+        type: RSA
+        size: 4096
+    - name: Generate ECC 256 bit key (P-256)
+      openssl_privatekey:
+        path: keys/acme-account.key
+        type: ECC
+        curve: secp256k1
+    - name: Generate ECC 384 bit key (P-384)
+      openssl_privatekey:
+        path: keys/acme-account.key
+        type: ECC
+        curve: secp384r1
+
+Make sure you store the account key safely. As opposed to certificate private keys, there is no need to regenerate it frequently, and it makes recovation of certificates issued with it very simple.
 
 ## Role Variables
 
 These are the main variables:
 
-- `acme_account`: Path to the private ACME account key. Can be created by running `python code/certtool.py gen-account-key --account-key ../../keys/acme-account.key`. Must always be specified.
+- `acme_account`: Path to the private ACME account key. Must always be specified.
 - `acme_email`: Your email address which shall be associated to the ACME account. Must always be specified.
 - `algorithm`: The algorithm used for creating private keys. The default is `"rsa"`; other choices are `"p-256"`, `"p-384"` or `"p-521"` for the NIST elliptic curves `prime256v1`, `secp384r1` and `secp521r1`, respectively.
 - `key_length`: The bitlength to use for RSA private keys. The default is 4096.
@@ -41,6 +72,7 @@ These are the main variables:
 - `root_certificate`: The root certificate for the ACME directory. Default value is `https://letsencrypt.org/certs/isrgrootx1.pem` for the root certificate of Let's Encrypt.
 - `deactivate_authzs`: Whether `authz`s (authorizations) should be deactivated afterwards. Default value is `true`. Set to `false` to be able to re-use `authz`s.
 - `modify_account`: Whether the ACME account should be created (if it doesn't exist) and the contact data (email address) should be updated. Default value is `true`. Set to `false` if you want to use the `acme_account` module to manage your ACME account.
+- `privatekey_mode`: Which file mode to use for the private key file. Default value is `"0600"`, which means read- and writeable by the owner, but not accessible by anyone else (except possibly `root`).
 
 ### HTTP Challenges
 
@@ -279,7 +311,7 @@ This role can be used as follows. Note that it obtains several certificates, and
 
 The MIT License (MIT)
 
-Copyright (c) 2018 Felix Fontein
+Copyright (c) 2018-2019 Felix Fontein
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

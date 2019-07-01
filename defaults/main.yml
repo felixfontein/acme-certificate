@@ -6,7 +6,7 @@ keys_old_path: "keys/old/"
 keys_old_store: no
 keys_old_prepend_timestamp: no
 ocsp_must_staple: no
-terms_agreed: true
+terms_agreed: yes
 acme_directory: https://acme-v02.api.letsencrypt.org/directory
 acme_version: 2
 # For ACME v1:
@@ -19,15 +19,16 @@ challenge: http-01
 root_certificate: https://letsencrypt.org/certs/isrgrootx1.pem
 # For staging, use:
 #   root_certificate: https://letsencrypt.org/certs/fakelerootx1.pem
+deactivate_authzs: yes
+modify_account: yes
+validate_certs: yes
+verify_certs: yes
+privatekey_mode: "0600"
 
 # For HTTP challenges:
 server_location: /var/www/challenges
-http_become: false
+http_become: no
 http_challenge_user: root
 http_challenge_group: http
 http_challenge_folder_mode: "0750"
 http_challenge_file_mode: "0640"
-deactivate_authzs: true
-modify_account: true
-validate_certs: true
-verify_certs: true
