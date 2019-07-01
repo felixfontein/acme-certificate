@@ -90,7 +90,8 @@ ALGORITHMS = {
     'rsa': RSA(),
     'p-256': ECC('p-256', 'prime256v1', 256),
     'p-384': ECC('p-384', 'secp384r1', 384),
-    'p-521': ECC('p-521', 'secp521r1', 528),
+    # 'p-521': ECC('p-521', 'secp521r1', 528),  -- P-521 isn't supported yet (on Let's Encrypt staging server);
+    #                                              see https://github.com/letsencrypt/boulder/issues/2217
 }
 
 
@@ -270,7 +271,7 @@ if __name__ == '__main__':
                 Also note that by default, RSA keys are generated. If you want ECC keys,
                 please specify "--algorithm <alg>" with <alg> being "p-256" or "p-384".
                 '''),
-            epilog='\n'.join(additional_description)
+            epilog = '\n'.join(additional_description)
         )
         parser.add_argument('command', type=str, nargs='?', help='must be one of {0}'.format(', '.join('"{0}"'.format(command) for command in sorted(commands.keys()))))
         parser.add_argument('--account-key', required=False, help="path to your Let's Encrypt account private key")

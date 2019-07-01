@@ -64,6 +64,7 @@
     module: get_url
     url: "{{ root_certificate }}"
     dest: "{{ keys_path }}{{ key_name }}-root.pem"
+    force: yes
   run_once: True
   tags:
   - issue-tls-certs-newkey
