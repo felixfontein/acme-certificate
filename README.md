@@ -4,7 +4,7 @@ Allows to obtain certificates from Let's Encrypt with minimal interaction with t
 
 ## Description
 
-This is an [Ansible](https://github.com/ansible/ansible) role which can use any CA supporting the ACME protocol, such as [Let's Encrypt](https://letsencrypt.org/), to issue TLS/SSL certificates for your server. This role requires Ansible 2.6.0 or newer and is based on the [acme_certificate module](https://docs.ansible.com/ansible/latest/acme_certificate_module.html) coming with Ansible.
+This is an [Ansible](https://github.com/ansible/ansible) role which can use any CA supporting the ACME protocol, such as [Let's Encrypt](https://letsencrypt.org/), to issue TLS/SSL certificates for your server. This role requires Ansible 2.8.0 or newer and is based on the [acme_certificate module](https://docs.ansible.com/ansible/latest/acme_certificate_module.html) coming with Ansible.
 
 (If you prefer the [acme_compact](https://github.com/felixfontein/acme-compact) based version, you can check out the [acme_compact_version branch](https://github.com/felixfontein/acme-certificate/tree/acme_compact_version).)
 
@@ -16,7 +16,7 @@ The role uses a Python script (`certtool.py`) for convenience tasks with certifi
 
 ## Requirements
 
-Requires `openssl` installed on the controller. It must be available on the executable path.
+Requires the Python [cryptography](https://github.com/ansible/ansible/pull/49568) library installed on the controller, available to the Python version used to execute the playbook. If this is not installed, having the `openssl` binary in the executable path is also supported, together with a recent enough version of [PyOpenSSL](https://pypi.org/project/pyOpenSSL/).
 
 If DNS challenges are used, there can be other requirements depending on the DNS provider. For example, for Amazon's Route 53, the Ansible `route53` module requires the Python `boto` package.
 
