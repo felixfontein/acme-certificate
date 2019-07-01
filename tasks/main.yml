@@ -105,6 +105,7 @@
     url: "{{ root_certificate }}"
     dest: "{{ keys_path }}{{ key_name }}-root.pem"
     force: yes
+    validate_certs: "{{ validate_certs }}"
   delegate_to: localhost
   run_once: yes
   tags:
