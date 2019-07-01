@@ -46,6 +46,9 @@
 
 - set_fact:
     force_regenerate_private_key: no
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
 
 - set_fact:
     force_regenerate_private_key: yes
@@ -53,8 +56,28 @@
   - issue-tls-certs-newkey
 
 - block:
-  - name: "Creating private key for domains {{ ', '.join(domains) }}"
-    command: python {{ role_path }}/code/certtool.py gen-key --key "{{ keys_path }}{{ key_name }}.key" --algorithm {{ algorithm }} --key-length {{ key_length }}
+  - name: "Creating private key for domains {{ ', '.join(domains) }} (RSA)"
+    openssl_privatekey:
+      path: "{{ keys_path }}{{ key_name }}.key"
+      mode: "{{ privatekey_mode }}"
+      type: RSA
+      size: "{{ key_length }}"
+      force: "{{ force_regenerate_private_key }}"
+    when: "algorithm == 'rsa'"
+    delegate_to: localhost
+    run_once: yes
+  - name: "Creating private key for domains {{ ', '.join(domains) }} (ECC)"
+    openssl_privatekey:
+      path: "{{ keys_path }}{{ key_name }}.key"
+      mode: "{{ privatekey_mode }}"
+      type: ECC
+      curve: |
+        'secp256k1' if algorithm == 'p-256' else
+        'secp384r1' if algorithm == 'p-384' else
+        'secp521r1' if algorithm == 'p-521' else
+        'invalid value for algorithm!'
+      force: "{{ force_regenerate_private_key }}"
+    when: "algorithm != 'rsa'"
     delegate_to: localhost
     run_once: yes
   tags:
@@ -63,7 +86,14 @@
 
 - block:
   - name: "Creating CSR for domains {{ ', '.join(domains) }}"
-    command: python {{ role_path }}/code/certtool.py gen-csr --key "{{ keys_path }}{{ key_name }}.key" --csr "{{ keys_path }}{{ key_name }}.csr" --domains "{{ ','.join(domains) }}" {% if ocsp_must_staple %}--must-staple{% endif %}
+    openssl_csr:
+      path: "{{ keys_path }}{{ key_name }}.csr"
+      privatekey_path: "{{ keys_path }}{{ key_name }}.key"
+      subject_alt_name: |
+          {{ domains | map('regex_replace', '^(.*)$', 'DNS:\1' ) | list }}
+      ocsp_must_staple: "{{ ocsp_must_staple }}"
+      use_common_name_for_san: no
+      force: yes
     delegate_to: localhost
     run_once: yes
   tags:

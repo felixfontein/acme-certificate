@@ -23,6 +23,7 @@ deactivate_authzs: yes
 modify_account: yes
 validate_certs: yes
 verify_certs: yes
+privatekey_mode: "0600"
 
 # For HTTP challenges:
 server_location: /var/www/challenges
