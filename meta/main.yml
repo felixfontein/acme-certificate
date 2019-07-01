@@ -1,4 +1,5 @@
 galaxy_info:
+  role_name: acme_certificate
   author: Felix Fontein
   description: >
     Wrapper of Ansible's included acme_certificate module, whose aim is that almost no code
