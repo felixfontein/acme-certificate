@@ -46,7 +46,7 @@ With Ansible, you can use the `openssl_privatekey` module as follows:
       openssl_privatekey:
         path: keys/acme-account.key
         type: ECC
-        curve: secp256k1
+        curve: secp256r1
     - name: Generate ECC 384 bit key (P-384)
       openssl_privatekey:
         path: keys/acme-account.key
