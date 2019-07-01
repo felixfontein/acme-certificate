@@ -71,11 +71,11 @@
       path: "{{ keys_path }}{{ key_name }}.key"
       mode: "{{ privatekey_mode }}"
       type: ECC
-      curve: |
-        'secp256k1' if algorithm == 'p-256' else
-        'secp384r1' if algorithm == 'p-384' else
-        'secp521r1' if algorithm == 'p-521' else
-        'invalid value for algorithm!'
+      curve: >-
+        {{ 'secp256k1' if algorithm == 'p-256' else
+           'secp384r1' if algorithm == 'p-384' else
+           'secp521r1' if algorithm == 'p-521' else
+           'invalid value for algorithm!' }}
       force: "{{ force_regenerate_private_key }}"
     when: "algorithm != 'rsa'"
     delegate_to: localhost
