@@ -3,7 +3,7 @@
   assert:
     that: "ansible_version.string is version('2.8.0', '>=')"
     msg: "This version of the acme-certificate role must be used with Ansible 2.8.0 or later."
-  run_once: True
+  run_once: yes
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
@@ -12,25 +12,25 @@
   assert:
     that: "challenge != 'dns-01' or dns_provider is not undefined"
     msg: "dns_provider must be defined for dns-01 DNS challenge"
-  run_once: True
+  run_once: yes
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
 
 - block:
   - name: "Test whether old certificate files for domains {{ ', '.join(domains) }} exist"
-    local_action:
-      module: stat
+    stat:
       path: "{{ keys_path }}/{{ key_name }}.pem"
+    delegate_to: localhost
     register: old_certificate_exists
     when: "keys_old_store"
-    run_once: True
+    run_once: yes
 
   - name: "Copying old certificate files for domains {{ ', '.join(domains) }}"
-    local_action:
-      module: copy
+    copy:
       src: "{{ keys_path }}/{{ key_name }}{{ item }}"
       dest: "{{ keys_old_path }}/{{ (ansible_date_time.date ~ '-' ~ ansible_date_time.hour ~ ansible_date_time.minute ~ ansible_date_time.second ~ '-') if keys_old_prepend_timestamp else '' }}{{ key_name }}{{ item }}"
+    delegate_to: localhost
     with_items:
     - "-chain.pem"
     - "-fullchain.pem"
@@ -39,41 +39,51 @@
     - ".key"
     - ".pem"
     when: "keys_old_store and old_certificate_exists.stat.exists"
-    run_once: True
+    run_once: yes
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs
+
+- set_fact:
+    force_regenerate_private_key: no
+
+- set_fact:
+    force_regenerate_private_key: yes
+  tags:
+  - issue-tls-certs-newkey
+
+- block:
+  - name: "Creating private key for domains {{ ', '.join(domains) }}"
+    command: python {{ role_path }}/code/certtool.py gen-key --key "{{ keys_path }}{{ key_name }}.key" --algorithm {{ algorithm }} --key-length {{ key_length }}
+    delegate_to: localhost
+    run_once: yes
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
 
 - block:
-  - name: "Creating private key for domains {{ ', '.join(domains) }}"
-    local_action: command python {{ role_path }}/code/certtool.py gen-key --key "{{ keys_path }}{{ key_name }}.key" --algorithm {{ algorithm }} --key-length {{ key_length }}
-    run_once: True
-  tags:
-  - issue-tls-certs-newkey
-
-- block:
   - name: "Creating CSR for domains {{ ', '.join(domains) }}"
-    local_action: command python {{ role_path }}/code/certtool.py gen-csr --key "{{ keys_path }}{{ key_name }}.key" --csr "{{ keys_path }}{{ key_name }}.csr" --domains "{{ ','.join(domains) }}" {% if ocsp_must_staple %}--must-staple{% endif %}
-    run_once: True
+    command: python {{ role_path }}/code/certtool.py gen-csr --key "{{ keys_path }}{{ key_name }}.key" --csr "{{ keys_path }}{{ key_name }}.csr" --domains "{{ ','.join(domains) }}" {% if ocsp_must_staple %}--must-staple{% endif %}
+    delegate_to: localhost
+    run_once: yes
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
 
 - name: "Get root certificate for domains {{ ', '.join(domains) }}"
-  local_action:
-    module: get_url
+  get_url:
     url: "{{ root_certificate }}"
     dest: "{{ keys_path }}{{ key_name }}-root.pem"
     force: yes
-  run_once: True
+  delegate_to: localhost
+  run_once: yes
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
 
 - block:
   - name: "Preparing challenges for domains {{ ', '.join(domains) }}"
-    local_action:
-      module: acme_certificate
+    acme_certificate:
       account_key: "{{ acme_account }}"
       modify_account: "{{ modify_account }}"
       csr: "{{ keys_path }}{{ key_name }}.csr"
@@ -87,13 +97,14 @@
       acme_version: "{{ acme_version }}"
       force: yes
       validate_certs: "{{ validate_certs }}"
-    run_once: True
+    delegate_to: localhost
+    run_once: yes
     register: lets_encrypt_challenge
 
   always:
   - debug:
       msg: "account URI: {{ lets_encrypt_challenge.get('account_uri') }}; order URI: {{ lets_encrypt_challenge.get('order_uri') }}"
-    run_once: True
+    run_once: yes
 
   tags:
   - issue-tls-certs-newkey
@@ -109,8 +120,7 @@
     when: "challenge == 'dns-01'"
 
   - name: "Getting certificates for domains {{ ', '.join(domains) }}"
-    local_action:
-      module: acme_certificate
+    acme_certificate:
       account_key: "{{ acme_account }}"
       modify_account: "{{ modify_account }}"
       csr: "{{ keys_path }}{{ key_name }}.csr"
@@ -126,14 +136,15 @@
       data: "{{ lets_encrypt_challenge }}"
       deactivate_authzs: "{{ deactivate_authzs }}"
       validate_certs: "{{ validate_certs }}"
-    run_once: True
+    delegate_to: localhost
+    run_once: yes
 
   - name: "Form root chain for domains {{ ', '.join(domains) }}"
-    local_action:
-      module: copy
+    copy:
       dest: "{{ keys_path }}{{ key_name }}-rootchain.pem"
       content: "{{ lookup('file', keys_path ~ key_name ~ '-root.pem') }}\n{{ lookup('file', keys_path ~ key_name ~ '-chain.pem') }}\n"
-    run_once: True
+    delegate_to: localhost
+    run_once: yes
   always:
   # Clean up HTTP challenges
   - include_tasks: http-cleanup.yml
@@ -149,11 +160,10 @@
   when: lets_encrypt_challenge is changed
 
 - name: "Verifying certificate for domains {{ ', '.join(domains) }}"
-  local_action:
-    module: command
-    _raw_params: openssl verify -CAfile "{{ keys_path }}{{ key_name }}-root.pem" -untrusted "{{ keys_path }}{{ key_name }}-chain.pem" "{{ keys_path }}{{ key_name }}.pem"
-  changed_when: False
-  run_once: True
+  command: openssl verify -CAfile "{{ keys_path }}{{ key_name }}-root.pem" -untrusted "{{ keys_path }}{{ key_name }}-chain.pem" "{{ keys_path }}{{ key_name }}.pem"
+  changed_when: no
+  delegate_to: localhost
+  run_once: yes
   ignore_errors: "{{ not verify_certs }}"
   tags:
   - issue-tls-certs-newkey
