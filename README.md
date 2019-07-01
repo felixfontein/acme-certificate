@@ -2,6 +2,10 @@
 
 Allows to obtain certificates from Let's Encrypt with minimal interaction with the webserver. Most code is executed on the controller, and the account key is never send to the nodes.
 
+The role can be installed via [Ansible Galaxy](https://galaxy.ansible.com/felixfontein/acme_certificate):
+
+    ansible-galaxy install felixfontein.acme_certificate
+
 ## Description
 
 This is an [Ansible](https://github.com/ansible/ansible) role which can use any CA supporting the ACME protocol, such as [Let's Encrypt](https://letsencrypt.org/), to issue TLS/SSL certificates for your server. This role requires Ansible 2.8.0 or newer and is based on the [acme_certificate module](https://docs.ansible.com/ansible/latest/acme_certificate_module.html) coming with Ansible.
