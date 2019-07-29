@@ -8,7 +8,7 @@ The role can be installed via [Ansible Galaxy](https://galaxy.ansible.com/felixf
 
 ## Description
 
-This is an [Ansible](https://github.com/ansible/ansible) role which can use any CA supporting the ACME protocol, such as [Let's Encrypt](https://letsencrypt.org/), to issue TLS/SSL certificates for your server. This role requires Ansible 2.8.0 or newer and is based on the [acme_certificate module](https://docs.ansible.com/ansible/latest/acme_certificate_module.html) coming with Ansible.
+This is an [Ansible](https://github.com/ansible/ansible) role which can use any CA supporting the ACME protocol, such as [Let's Encrypt](https://letsencrypt.org/), to issue TLS/SSL certificates for your server. This role requires Ansible 2.8.3 or newer and is based on the [acme_certificate module](https://docs.ansible.com/ansible/latest/acme_certificate_module.html) coming with Ansible.
 
 (If you prefer the [acme_compact](https://github.com/felixfontein/acme-compact) based version, you can check out the [acme_compact_version branch](https://github.com/felixfontein/acme-certificate/tree/acme_compact_version).)
 
