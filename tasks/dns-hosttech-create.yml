@@ -21,3 +21,4 @@
 - name: Wait for DNS entries to propagate
   pause:
     seconds: 10
+...

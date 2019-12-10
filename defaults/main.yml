@@ -1,3 +1,4 @@
+---
 algorithm: "rsa"
 key_length: 4096
 key_name: "{{ domains[0].replace('*', '_') }}"
@@ -32,3 +33,4 @@ http_challenge_user: root
 http_challenge_group: http
 http_challenge_folder_mode: "0750"
 http_challenge_file_mode: "0640"
+...
