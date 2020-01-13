@@ -29,7 +29,14 @@
   - name: "Copying old certificate files for domains {{ ', '.join(domains) }}"
     copy:
       src: "{{ [keys_path, key_name] | path_join }}{{ item }}"
-      dest: "{{ [keys_old_path, ((ansible_date_time.date ~ '-' ~ ansible_date_time.hour ~ ansible_date_time.minute ~ ansible_date_time.second ~ '-') if keys_old_prepend_timestamp else '') ~ key_name ~ item] | path_join }}"
+      dest: >-
+        {{ [
+          keys_old_path,
+          (
+            (ansible_date_time.date ~ '-' ~ ansible_date_time.hour ~ ansible_date_time.minute ~ ansible_date_time.second ~ '-')
+            if keys_old_prepend_timestamp else ''
+          ) ~ key_name ~ item
+        ] | path_join }}
     delegate_to: localhost
     with_items:
     - "-chain.pem"
@@ -173,7 +180,9 @@
   - name: "Form root chain for domains {{ ', '.join(domains) }}"
     copy:
       dest: "{{ [keys_path, key_name ~ '-rootchain.pem'] | path_join }}"
-      content: "{{ lookup('file', [keys_path, key_name ~ '-root.pem'] | path_join) }}\n{{ lookup('file', [keys_path, key_name ~ '-chain.pem'] | path_join) }}\n"
+      content: |
+        {{ lookup('file', [keys_path, key_name ~ '-root.pem'] | path_join) }}
+        {{ lookup('file', [keys_path, key_name ~ '-chain.pem'] | path_join) }}
     delegate_to: localhost
     run_once: yes
   always:
@@ -191,7 +200,11 @@
   when: lets_encrypt_challenge is changed
 
 - name: "Verifying certificate for domains {{ ', '.join(domains) }}"
-  command: openssl verify -CAfile "{{ [keys_path, key_name ~ '-root.pem'] | path_join }}" -untrusted "{{ [keys_path, key_name ~ '-chain.pem'] | path_join }}" "{{ [keys_path, key_name ~ '.pem'] | path_join }}"
+  command: >-
+    openssl verify
+    -CAfile "{{ [keys_path, key_name ~ '-root.pem'] | path_join }}"
+    -untrusted "{{ [keys_path, key_name ~ '-chain.pem'] | path_join }}"
+    "{{ [keys_path, key_name ~ '.pem'] | path_join }}"
   changed_when: no
   delegate_to: localhost
   run_once: yes

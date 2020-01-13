@@ -1,3 +1,4 @@
+---
 algorithm: "rsa"
 key_length: 4096
 key_name: "{{ domains[0].replace('*', '_') }}"
