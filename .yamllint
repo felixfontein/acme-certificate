@@ -3,12 +3,12 @@ extends: default
 
 rules:
   line-length:
-    max: 120
+    max: 140
     level: warning
   document-start:
     present: true
   document-end:
-    present: true
+    present: false
   truthy:
     level: error
     allowed-values:
@@ -43,4 +43,3 @@ rules:
   braces:
     min-spaces-inside: 0
     max-spaces-inside: 0
-...

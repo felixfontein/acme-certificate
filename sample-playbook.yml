@@ -57,4 +57,3 @@
       #    keys/another.example.com-ecc-fullchain.pem  (certificate with intermediate certificate)
       #    keys/another.example.com-ecc-root.pem  (root certificate)
       #    keys/another.example.com-ecc-rootchain.pem  (intermediate certificate with root certificate)
-...
