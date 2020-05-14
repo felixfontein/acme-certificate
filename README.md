@@ -140,12 +140,18 @@ With this config, if `/var/www/challenges/` is empty, your HTTP server will beha
 
 If DNS challenges are used, the following variables define how the challenges can be fulfilled:
 
-- `dns_provider`: must be one of `route53`, `hosttech` or `gcdns`. Each needs more information:
+- `dns_provider`: must be one of `route53`, `hosttech`, `gcdns` or `ns1`. Each needs more information:
   - For `route53` (Amazon Route 53), the credentials must be passed as `aws_access_key` and `aws_secret_key`.
   - For `hosttech` (hosttech GmbH, requires external [hosttech_dns_record module](https://github.com/felixfontein/ansible-hosttech)).
   - For `gcdns` (Google Cloud DNS), the files `tasks/dns-gcdns-*.yml` need to be adjusted to add required credentials. See the documentation of the [gcdns_record module](https://docs.ansible.com/ansible/latest/gcdns_record_module.html).
+  - For `ns1` ([ns1.com](https://ns1.com)) the key for your API account must be passed as `ns1_secret_key`. Also it depends on external module `ns1_record`. Assuming default directory structure and settings, you may need download 2 files into machine where playbook executed:
 
-Please note that the DNS challenge code is experimental. The Route 53 and Hosttech functionality has been tested. Also, the code tries to extract the DNS zone from the domain by taking the last two components separated by dots. This will fail for example for `.co.uk` domains or other nested zones.
+  ```bash
+  curl --create-dirs -L -o ~/.ansible/plugins/module_utils/ns1.py https://github.com/ns1/ns1-ansible-modules/raw/master/module_utils/ns1.py
+  curl --create-dirs -L -o ~/.ansible/plugins/modules/ns1_record.py https://github.com/ns1/ns1-ansible-modules/raw/master/library/ns1_record.py
+  ```
+
+Please note that the DNS challenge code is experimental. The Route 53, Hosttech and NS1 functionality has been tested. Also, the code tries to extract the DNS zone from the domain by taking the last two components separated by dots. This will fail for example for `.co.uk` domains or other nested zones.
 
 Support for more DNS providers can be added by adding `tasks/dns-NAME-create.yml` and `tasks/dns-NAME-cleanup.yml` files with similar content as in the existing files. Ansible modules of interest are [azure_rm_dnsrecordset](https://docs.ansible.com/ansible/latest/azure_rm_dnsrecordset_module.html) for Azure, [os_recordset](https://docs.ansible.com/ansible/latest/os_recordset_module.html) for OpenStack, [rax_dns_record](https://docs.ansible.com/ansible/latest/rax_dns_record_module.html) for RackSpace, and [udm_dns_record](https://docs.ansible.com/ansible/latest/udm_dns_record_module.html) for univention corporate servers (UCS).
 
@@ -263,7 +269,7 @@ This role can be used as follows. Note that it obtains several certificates, and
         http_challenge_group: http
         http_challenge_folder_mode: "0750"
         http_challenge_file_mode: "0640"
-        # For DNS challenges:
+        # For DNS challenges with route53. Example with ns1 could be found in a sample-playbook.yml
         dns_provider: route53
         aws_access_key: REPLACE_WITH_YOUR_ACCESS_KEY
         aws_secret_key: REPLACE_WITH_YOUR_SECRET_KEY
