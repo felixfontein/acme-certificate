@@ -1,0 +1,16 @@
+---
+- name: Cleaning up challenge DNS entries for domains {{ ', '.join(domains) }} via NS1 API
+  local_action:
+    module: ns1_record
+    apiKey: "{{ ns1_secret_key }}"
+    name: "{{ item.key }}"
+    zone: "{{ item.key | regex_replace('^(?:.*\\.|)([^.]+\\.[^.]+)$', '\\1') }}"
+    state: absent
+    type: TXT
+    answers: []
+  run_once: True
+  when: "'_acme-challenge' in item.key"
+  with_dict: "{{ lets_encrypt_challenge.get('challenge_data_dns', {}) }}"
+  tags:
+  - issue-tls-certs-newkey
+  - issue-tls-certs

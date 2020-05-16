@@ -10,10 +10,13 @@
     http_challenge_group: http
     http_challenge_folder_mode: "0750"
     http_challenge_file_mode: "0640"
-    # For DNS challenges:
+    # For DNS challenges with route53:
     dns_provider: route53
     aws_access_key: REPLACE_WITH_YOUR_ACCESS_KEY
     aws_secret_key: REPLACE_WITH_YOUR_SECRET_KEY
+    # For DNS challenges with ns1:
+    dns_provider: ns1
+    ns1_secret_key: REPLACE_WITH_YOUR_SECRET_KEY
   roles:
     - role: acme-certificate
       domains: ['example.com', 'www.example.com']
