@@ -8,9 +8,7 @@ The role can be installed via [Ansible Galaxy](https://galaxy.ansible.com/felixf
 
 ## Description
 
-This is an [Ansible](https://github.com/ansible/ansible) role which can use any CA supporting the ACME protocol, such as [Let's Encrypt](https://letsencrypt.org/), to issue TLS/SSL certificates for your server. This role requires Ansible 2.8.3 or newer and is based on the [acme_certificate module](https://docs.ansible.com/ansible/latest/acme_certificate_module.html) coming with Ansible.
-
-(If you prefer the [acme_compact](https://github.com/felixfontein/acme-compact) based version, you can check out the [acme_compact_version branch](https://github.com/felixfontein/acme-certificate/tree/acme_compact_version).)
+This is an [Ansible](https://github.com/ansible/ansible) role which can use any CA supporting the ACME protocol, such as [Let's Encrypt](https://letsencrypt.org/) or [Buypass](https://www.buypass.com/ssl/products/acme), to issue TLS/SSL certificates for your server. This role requires Ansible 2.8.3 or newer and is based on the [acme_certificate module](https://docs.ansible.com/ansible/latest/acme_certificate_module.html) coming with Ansible.
 
 The main advantage of this approach over others is that *almost no code is executed on your webserver*: only when you use HTTP challenges, files need to be copied onto your webserver, and afterwards deleted from it. Everything else is executed on your local machine!
 
@@ -18,7 +16,7 @@ The main advantage of this approach over others is that *almost no code is execu
 
 ## Requirements
 
-Requires the Python [cryptography](https://github.com/ansible/ansible/pull/49568) library installed on the controller, available to the Python version used to execute the playbook. If `cryptography` is not installed, a recent enough version of [PyOpenSSL](https://pypi.org/project/pyOpenSSL/) is currently supported as a fallback by the Ansible `openssl_privatekey` and `openssl_csr` modules.
+Requires the Python [cryptography](https://pypi.org/project/cryptography/) library installed on the controller, available to the Python version used to execute the playbook. If `cryptography` is not installed, a recent enough version of [PyOpenSSL](https://pypi.org/project/pyOpenSSL/) is currently supported as a fallback by the Ansible `openssl_privatekey` and `openssl_csr` modules.
 
 The `openssl` binary must also be available in the executable path on the controller. It is needed by the `acme_certificate` module in case `cryptography` is not installed, and it is used for certificate chain validation.
 
@@ -57,37 +55,39 @@ Make sure you store the account key safely. As opposed to certificate private ke
 
 ## Role Variables
 
+Please note that from May 2020 on, all variables must be prefixed with `acme_certificate_`. For some time, the module will still use the old (short) variable names if the longer ones are not defined. Please upgrade your role usage as soon as possible.
+
 These are the main variables:
 
-- `acme_account`: Path to the private ACME account key. Must always be specified.
-- `acme_email`: Your email address which shall be associated to the ACME account. Must always be specified.
-- `algorithm`: The algorithm used for creating private keys. The default is `"rsa"`; other choices are `"p-256"`, `"p-384"` or `"p-521"` for the NIST elliptic curves `prime256v1`, `secp384r1` and `secp521r1`, respectively.
-- `key_length`: The bitlength to use for RSA private keys. The default is 4096.
-- `key_name`: The basename for storing the keys and certificates. The default is the first domain specified, with `*` replaced by `_`.
-- `keys_path`: Where the keys and certificates are stored. Default value is `"keys/"`.
-- `keys_old_path`: Where old keys and certificates should be copied to; used in case `keys_old_store` is true. Default value is `"keys/old/"`.
-- `keys_old_store`: If set to `true`, will make copies of old keys and certificates. The copies will be stored in the directory specified by `keys_old_store`. Default value is `false`.
-- `keys_old_prepend_timestamp`: Whether copies of old keys and certificates should be prepended by the current date and time. Default value is `false`.
-- `ocsp_must_staple`: Whether a certificate with the OCSP Must Staple extension is requested. Default value is `false`.
-- `agreement`: The terms of service document the user agrees to. Default value is `https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf`.
-- `acme_directory`: The ACME directory to use. Default is `https://acme-v02.api.letsencrypt.org/directory`, which is the current production ACME v2 endpoint of Let's Encrypt.
-- `acme_version`: The ACME directory's version. Default is 2. Use 1 for ACME v1.
-- `challenge`: The challenge type to use. Should be `http-01` for HTTP challenges (needs access to web server) or `dns-01` for DNS challenges (needs access to DNS provider).
-- `root_certificate`: The root certificate for the ACME directory. Default value is `https://letsencrypt.org/certs/isrgrootx1.pem` for the root certificate of Let's Encrypt.
-- `deactivate_authzs`: Whether `authz`s (authorizations) should be deactivated afterwards. Default value is `true`. Set to `false` to be able to re-use `authz`s.
-- `modify_account`: Whether the ACME account should be created (if it doesn't exist) and the contact data (email address) should be updated. Default value is `true`. Set to `false` if you want to use the `acme_account` module to manage your ACME account.
-- `privatekey_mode`: Which file mode to use for the private key file. Default value is `"0600"`, which means read- and writeable by the owner, but not accessible by anyone else (except possibly `root`).
+- `acme_certificate_acme_account`: Path to the private ACME account key. Must always be specified.
+- `acme_certificate_acme_email`: Your email address which shall be associated to the ACME account. Must always be specified.
+- `acme_certificate_algorithm`: The algorithm used for creating private keys. The default is `"rsa"`; other choices are `"p-256"`, `"p-384"` or `"p-521"` for the NIST elliptic curves `prime256v1`, `secp384r1` and `secp521r1`, respectively.
+- `acme_certificate_key_length`: The bitlength to use for RSA private keys. The default is 4096.
+- `acme_certificate_key_name`: The basename for storing the keys and certificates. The default is the first domain specified, with `*` replaced by `_`.
+- `acme_certificate_keys_path`: Where the keys and certificates are stored. Default value is `"keys/"`.
+- `acme_certificate_keys_old_path`: Where old keys and certificates should be copied to; used in case `acme_certificate_keys_old_store` is true. Default value is `"keys/old/"`.
+- `acme_certificate_keys_old_store`: If set to `true`, will make copies of old keys and certificates. The copies will be stored in the directory specified by `acme_certificate_keys_old_store`. Default value is `false`.
+- `acme_certificate_keys_old_prepend_timestamp`: Whether copies of old keys and certificates should be prepended by the current date and time. Default value is `false`.
+- `acme_certificate_ocsp_must_staple`: Whether a certificate with the OCSP Must Staple extension is requested. Default value is `false`.
+- `acme_certificate_agreement`: The terms of service document the user agrees to. Default value is `https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf`.
+- `acme_certificate_acme_directory`: The ACME directory to use. Default is `https://acme-v02.api.letsencrypt.org/directory`, which is the current production ACME v2 endpoint of Let's Encrypt.
+- `acme_certificate_acme_version`: The ACME directory's version. Default is 2. Use 1 for ACME v1.
+- `acme_certificate_challenge`: The challenge type to use. Should be `http-01` for HTTP challenges (needs access to web server) or `dns-01` for DNS challenges (needs access to DNS provider).
+- `acme_certificate_root_certificate`: The root certificate for the ACME directory. Default value is `https://letsencrypt.org/certs/isrgrootx1.pem` for the root certificate of Let's Encrypt.
+- `acme_certificate_deactivate_authzs`: Whether `authz`s (authorizations) should be deactivated afterwards. Default value is `true`. Set to `false` to be able to re-use `authz`s.
+- `acme_certificate_modify_account`: Whether the ACME account should be created (if it doesn't exist) and the contact data (email address) should be updated. Default value is `true`. Set to `false` if you want to use the `acme_account` module to manage your ACME account (not done by this role).
+- `acme_certificate_privatekey_mode`: Which file mode to use for the private key file. Default value is `"0600"`, which means read- and writeable by the owner, but not accessible by anyone else (except possibly `root`).
 
 ### HTTP Challenges
 
 For HTTP challenges, the following variables define how the challenges can be put onto the (remote) webserver:
 
-- `server_location`: Location where `.well-known/acme-challenge/` will be served from. Default is `/var/www/challenges`.
-- `http_become`: Argument for `become:` for the `file` and `copy` tasks. Default value is `false`.
-- `http_challenge_user`: The user the challenge files are owned by. Default value is `root`.
-- `http_challenge_group`: The group the challenge files are owned by. Default value is `http`.
-- `http_challenge_folder_mode`: The mode to use for the challenge folder. Default value is `0750` (octal).
-- `http_challenge_file_mode`: The mode to use for the challenge files. Default value is `0640` (octal).
+- `acme_certificate_server_location`: Location where `.well-known/acme-challenge/` will be served from. Default is `/var/www/challenges`.
+- `acme_certificate_http_become`: Argument for `become:` for the `file` and `copy` tasks. Default value is `false`.
+- `acme_certificate_http_challenge_user`: The user the challenge files are owned by. Default value is `root`.
+- `acme_certificate_http_challenge_group`: The group the challenge files are owned by. Default value is `http`.
+- `acme_certificate_http_challenge_folder_mode`: The mode to use for the challenge folder. Default value is `0750` (octal).
+- `acme_certificate_http_challenge_file_mode`: The mode to use for the challenge files. Default value is `0640` (octal).
 
 The following subsection shows how to configure [nginx](https://nginx.org/) for HTTP challenges. Configuring other webservers can be done in a similar way.
 
@@ -115,7 +115,7 @@ To allow the `acme-certificate` role to put something at `http://*.example.com/.
         }
     }
 
-With this nginx config, all other URLs on `*.example.com` and `example.com` are still redirected, while everything in `*.example.com/.well-known/acme-challenge/` is served from `/var/www/challenges`. When adjusting the location of `/var/www/challenges`, you must also change `server_location`.
+With this nginx config, all other URLs on `*.example.com` and `example.com` are still redirected, while everything in `*.example.com/.well-known/acme-challenge/` is served from `/var/www/challenges`. When adjusting the location of `/var/www/challenges`, you must also change `acme_certificate_server_location`.
 
 You can even improve on this by redirecting all URLs in `*.example.com/.well-known/acme-challenge/` which do not resolve to a valid file in `/var/www/challenges` to your HTTPS server as well. One way to do this is:
 
@@ -140,10 +140,10 @@ With this config, if `/var/www/challenges/` is empty, your HTTP server will beha
 
 If DNS challenges are used, the following variables define how the challenges can be fulfilled:
 
-- `dns_provider`: must be one of `route53`, `hosttech`, and `ns1`. Each needs more information:
-  - For `route53` (Amazon Route 53), the credentials must be passed as `aws_access_key` and `aws_secret_key`.
+- `acme_certificate_dns_provider`: must be one of `route53`, `hosttech`, and `ns1`. Each needs more information:
+  - For `route53` (Amazon Route 53), the credentials must be passed as `acme_certificate_aws_access_key` and `acme_certificate_aws_secret_key`.
   - For `hosttech` (hosttech GmbH, requires external [hosttech_dns_record module](https://github.com/felixfontein/ansible-hosttech)).
-  - For `ns1` ([ns1.com](https://ns1.com)) the key for your API account must be passed as `ns1_secret_key`. Also it depends on external module `ns1_record`. Assuming default directory structure and settings, you may need download 2 files into machine where playbook executed:
+  - For `ns1` ([ns1.com](https://ns1.com)) the key for your API account must be passed as `acme_certificate_ns1_secret_key`. Also it depends on external module `ns1_record`. Assuming default directory structure and settings, you may need download 2 files into machine where playbook executed:
 
   ```bash
   curl --create-dirs -L -o ~/.ansible/plugins/module_utils/ns1.py https://github.com/ns1/ns1-ansible-modules/raw/master/module_utils/ns1.py
@@ -176,13 +176,23 @@ For configuring your webserver, you need the private key (`keys/www.example.com.
 To get these files onto your web server, you could add tasks as follows:
 
     - name: copy private keys
-      copy: src=keys/{{ item }} dest=/etc/ssl/private/ owner=root group=root mode=0400
+      copy:
+        src: keys/{{ item }}
+        dest: /etc/ssl/private/
+        owner: root
+        group: root
+        mode: "0400"
       with_items:
       - www.example.com.key
       notify: reload webserver
 
     - name: copy certificates
-      copy: src=keys/{{ item }} dest=/etc/ssl/server-certs/ owner=root group=root mode=0444
+      copy:
+        src: keys/{{ item }}
+        dest: /etc/ssl/server-certs/
+        owner: root
+        group: root
+        mode: "0444"
       with_items:
       - www.example.com-rootchain.pem
       - www.example.com-fullchain.pem
@@ -260,23 +270,26 @@ This role can be used as follows. Note that it obtains several certificates, and
     - name: getting certificates for webserver
       hosts: webserver
       vars:
-        acme_account: 'keys/acme-account.key'
-        acme_email: 'mail@example.com'
+        acme_certificate_acme_account: 'keys/acme-account.key'
+        acme_certificate_acme_email: 'mail@example.com'
         # For HTTP challenges:
-        server_location: '/var/www/challenges/'
-        http_challenge_user: root
-        http_challenge_group: http
-        http_challenge_folder_mode: "0750"
-        http_challenge_file_mode: "0640"
-        # For DNS challenges with route53. Example with ns1 could be found in a sample-playbook.yml
-        dns_provider: route53
-        aws_access_key: REPLACE_WITH_YOUR_ACCESS_KEY
-        aws_secret_key: REPLACE_WITH_YOUR_SECRET_KEY
+        acme_certificate_server_location: '/var/www/challenges/'
+        acme_certificate_http_challenge_user: root
+        acme_certificate_http_challenge_group: http
+        acme_certificate_http_challenge_folder_mode: "0750"
+        acme_certificate_http_challenge_file_mode: "0640"
+        # For DNS challenges with route53:
+        acme_certificate_dns_provider: route53
+        acme_certificate_aws_access_key: REPLACE_WITH_YOUR_ACCESS_KEY
+        acme_certificate_aws_secret_key: REPLACE_WITH_YOUR_SECRET_KEY
+        # For DNS challenges with ns1:
+        # acme_certificate_dns_provider: ns1
+        # acme_certificate_ns1_secret_key: REPLACE_WITH_YOUR_SECRET_KEY
       roles:
         - role: acme-certificate
-          domains: ['example.com', 'www.example.com']
+          acme_certificate_domains: ['example.com', 'www.example.com']
           # Use DNS challenges:
-          challenge: dns-01
+          acme_certificate_challenge: dns-01
           # The certificate files will be stored at:
           #    keys/example.com.key  (private key)
           #    keys/example.com.csr  (certificate signing request)
@@ -287,11 +300,11 @@ This role can be used as follows. Note that it obtains several certificates, and
           #    keys/example.com-root.pem  (root certificate)
           #    keys/example.com-rootchain.pem  (intermediate certificate with root certificate)
         - role: acme-certificate
-          domains: ['another.example.com']
-          key_name: 'another.example.com-rsa'
-          key_length: 4096
+          acme_certificate_domains: ['another.example.com']
+          acme_certificate_key_name: 'another.example.com-rsa'
+          acme_certificate_key_length: 4096
           # Use HTTP challenges:
-          challenge: http-01
+          acme_certificate_challenge: http-01
           # The certificate files will be stored at:
           #    keys/another.example.com-rsa.key  (private key)
           #    keys/another.example.com-rsa.csr  (certificate signing request)
@@ -302,9 +315,9 @@ This role can be used as follows. Note that it obtains several certificates, and
           #    keys/another.example.com-rsa-root.pem  (root certificate)
           #    keys/another.example.com-rsa-rootchain.pem  (intermediate certificate with root certificate)
         - role: acme-certificate
-          domains: ['another.example.com']
-          key_name: 'another.example.com-ecc'
-          algorithm: 'p-256'
+          acme_certificate_domains: ['another.example.com']
+          acme_certificate_key_name: 'another.example.com-ecc'
+          acme_certificate_algorithm: 'p-256'
           # Use HTTP challenges (default for challenge is http-01).
           # The certificate files will be stored at:
           #    keys/another.example.com-ecc.key  (private key)

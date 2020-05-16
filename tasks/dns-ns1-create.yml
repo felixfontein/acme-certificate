@@ -1,8 +1,8 @@
 ---
-- name: Creating challenge DNS entries for domains {{ ', '.join(domains) }} via NS1 DNS
+- name: Creating challenge DNS entries for domains {{ ', '.join(acme_certificate_domains) }} via NS1 DNS
   local_action:
     module: ns1_record
-    apiKey: "{{ ns1_secret_key }}"
+    apiKey: "{{ acme_certificate_ns1_secret_key }}"
     name: "{{ item.key }}"
     zone: "{{ item.key | regex_replace('^(?:.*\\.|)([^.]+\\.[^.]+)$', '\\1') }}"
     state: present
@@ -11,16 +11,16 @@
       - answer:
           - "{{ item.value[0] }}"
         meta:
-          up: True
+          up: true
   when: "'_acme-challenge' in item.key"
-  run_once: True
-  with_dict: "{{ lets_encrypt_challenge.challenge_data_dns }}"
+  run_once: true
+  with_dict: "{{ acme_certificate_INTERNAL_challenge.challenge_data_dns }}"
 
 - name: Check if DNS changes propagated at dns1.p01.nsone.net with 10-seconds intervals
   command: "dig TXT {{ item.key }} +short @dns1.p01.nsone.net"
   register: dig
   until: "item.value[0] in dig.stdout"
-  with_dict: "{{ lets_encrypt_challenge.challenge_data_dns }}"
+  with_dict: "{{ acme_certificate_INTERNAL_challenge.challenge_data_dns }}"
   retries: 6
   delay: 10
   changed_when: false

@@ -2,26 +2,30 @@
 # Create up challenge files directory on server.
 - name: Creating challenge destination directory
   file:
-    dest: "{{ server_location }}"
+    dest: "{{ acme_certificate_server_location }}"
     state: directory
-    owner: "{{ http_challenge_user }}"
-    group: "{{ http_challenge_group }}"
-    mode: "{{ http_challenge_folder_mode }}"
-  become: "{{ http_become }}"
+    owner: "{{ acme_certificate_http_challenge_user }}"
+    group: "{{ acme_certificate_http_challenge_group }}"
+    mode: "{{ acme_certificate_http_challenge_folder_mode }}"
+  become: "{{ acme_certificate_http_become }}"
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
 
 # Create challenge files on server.
-- name: "Copying challenge files for domains {{ ', '.join(domains) }}"
+- name: "Copying challenge files for domains {{ ', '.join(acme_certificate_domains) }}"
   copy:
-    dest: "{{ [server_location, item.value[challenge].resource[('.well-known/acme-challenge/'|length):]] | path_join }}"
-    content: "{{ item.value[challenge].resource_value }}"
-    owner: "{{ http_challenge_user }}"
-    group: "{{ http_challenge_group }}"
-    mode: "{{ http_challenge_file_mode }}"
-  with_dict: "{{ lets_encrypt_challenge.challenge_data }}"
-  become: "{{ http_become }}"
+    dest: >-
+      {{ [
+        acme_certificate_server_location,
+        item.value[acme_certificate_challenge].resource[('.well-known/acme-challenge/'|length):]
+      ] | path_join }}
+    content: "{{ item.value[acme_certificate_challenge].resource_value }}"
+    owner: "{{ acme_certificate_http_challenge_user }}"
+    group: "{{ acme_certificate_http_challenge_group }}"
+    mode: "{{ acme_certificate_http_challenge_file_mode }}"
+  with_dict: "{{ acme_certificate_acme_certificate_INTERNAL_challenge.challenge_data }}"
+  become: "{{ acme_certificate_http_become }}"
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs

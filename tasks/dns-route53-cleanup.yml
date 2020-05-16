@@ -1,6 +1,6 @@
 ---
 # Clean up DNS challenges for DNS provider Amazon Route53
-- name: Cleaning up challenge DNS entries for domains {{ ', '.join(domains) }} via Route53
+- name: Cleaning up challenge DNS entries for domains {{ ', '.join(acme_certificate_domains) }} via Route53
   local_action:
     module: route53
     state: absent
@@ -10,10 +10,10 @@
     ttl: 60
     value: "{{ item.value | map('regex_replace', '^(.*)$', '\"\\1\"' ) | list }}"
     overwrite: true
-    aws_access_key: "{{ aws_access_key }}"
-    aws_secret_key: "{{ aws_secret_key }}"
-  run_once: True
-  with_dict: "{{ lets_encrypt_challenge.get('challenge_data_dns', {}) }}"
+    aws_access_key: "{{ acme_certificate_aws_access_key }}"
+    aws_secret_key: "{{ acme_certificate_aws_secret_key }}"
+  run_once: true
+  with_dict: "{{ acme_certificate_INTERNAL_challenge.get('challenge_data_dns', {}) }}"
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs

@@ -1,6 +1,6 @@
 ---
 # Clean up DNS challenges for DNS provider HostTech
-- name: Cleaning up challenge DNS entries for domains {{ ', '.join(domains) }} via HostTech API
+- name: Cleaning up challenge DNS entries for domains {{ ', '.join(acme_certificate_domains) }} via HostTech API
   local_action:
     module: hosttech_dns_record
     state: absent
@@ -10,10 +10,10 @@
     ttl: 300
     value: "{{ item.value }}"
     overwrite: true
-    hosttech_username: "{{ hosttech_username }}"
-    hosttech_password: "{{ hosttech_password }}"
-  run_once: True
-  with_dict: "{{ lets_encrypt_challenge.get('challenge_data_dns', {}) }}"
+    hosttech_username: "{{ acme_certificate_hosttech_username }}"
+    hosttech_password: "{{ acme_certificate_hosttech_password }}"
+  run_once: true
+  with_dict: "{{ acme_certificate_INTERNAL_challenge.get('challenge_data_dns', {}) }}"
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
