@@ -150,9 +150,9 @@ If DNS challenges are used, the following variables define how the challenges ca
   curl --create-dirs -L -o ~/.ansible/plugins/modules/ns1_record.py https://github.com/ns1/ns1-ansible-modules/raw/master/library/ns1_record.py
   ```
 
-Please note that the DNS challenge code is experimental. The Route 53, Hosttech and NS1 functionality has been tested. Also, the code tries to extract the DNS zone from the domain by taking the last two components separated by dots. This will fail for example for `.co.uk` domains or other nested zones.
+Please note that the DNS challenge code is not perfect. The Route 53, Hosttech and NS1 functionality has been tested. One thing that is not complete yet is that the code tries to extract the DNS zone from the domain by taking the last two components separated by dots. This will fail for example for `.co.uk` domains or other nested zones.
 
-Support for more DNS providers can be added by adding `tasks/dns-NAME-create.yml` and `tasks/dns-NAME-cleanup.yml` files with similar content as in the existing files. Ansible modules of interest are [azure_rm_dnsrecordset](https://docs.ansible.com/ansible/latest/azure_rm_dnsrecordset_module.html) for Azure, [os_recordset](https://docs.ansible.com/ansible/latest/os_recordset_module.html) for OpenStack, [rax_dns_record](https://docs.ansible.com/ansible/latest/rax_dns_record_module.html) for RackSpace, and [udm_dns_record](https://docs.ansible.com/ansible/latest/udm_dns_record_module.html) for univention corporate servers (UCS).
+Support for more DNS providers can be added by adding `tasks/dns-NAME-create.yml` and `tasks/dns-NAME-cleanup.yml` files with similar content as in the existing files.
 
 ## Account key conversion
 
@@ -320,7 +320,7 @@ This role can be used as follows. Note that it obtains several certificates, and
 
 The MIT License (MIT)
 
-Copyright (c) 2018-2019 Felix Fontein
+Copyright (c) 2018-2020 Felix Fontein
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
