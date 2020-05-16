@@ -62,47 +62,36 @@
   tags:
   - issue-tls-certs-newkey
 
-- block:
-  - name: "Creating private key for domains {{ ', '.join(domains) }} (RSA)"
-    openssl_privatekey:
-      path: "{{ [keys_path, key_name ~ '.key'] | path_join }}"
-      mode: "{{ privatekey_mode }}"
-      type: RSA
-      size: "{{ key_length }}"
-      force: "{{ force_regenerate_private_key }}"
-    when: "algorithm == 'rsa'"
-    delegate_to: localhost
-    run_once: yes
-  - name: "Creating private key for domains {{ ', '.join(domains) }} (ECC)"
-    openssl_privatekey:
-      path: "{{ [keys_path, key_name ~ '.key'] | path_join }}"
-      mode: "{{ privatekey_mode }}"
-      type: ECC
-      curve: >-
-        {{ 'secp256r1' if algorithm == 'p-256' else
-           'secp384r1' if algorithm == 'p-384' else
-           'secp521r1' if algorithm == 'p-521' else
-           'invalid value for algorithm!' }}
-      force: "{{ force_regenerate_private_key }}"
-    when: "algorithm != 'rsa'"
-    delegate_to: localhost
-    run_once: yes
+- name: "Creating private key for domains {{ ', '.join(domains) }} (RSA)"
+  openssl_privatekey:
+    path: "{{ [keys_path, key_name ~ '.key'] | path_join }}"
+    mode: "{{ privatekey_mode }}"
+    type: "{{ 'RSA' if algorithm == 'rsa' else 'ECC' }}
+    size: "{{ key_length if algorithm == 'rsa' else omit }}"
+    curve: >-
+      {{ omit if algorithm == 'rsa' else
+         'secp256r1' if algorithm == 'p-256' else
+         'secp384r1' if algorithm == 'p-384' else
+         'secp521r1' if algorithm == 'p-521' else
+         'invalid value for algorithm!' }}
+    force: "{{ force_regenerate_private_key }}"
+  delegate_to: localhost
+  run_once: yes
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
 
-- block:
-  - name: "Creating CSR for domains {{ ', '.join(domains) }}"
-    openssl_csr:
-      path: "{{ [keys_path, key_name ~ '.csr'] | path_join }}"
-      privatekey_path: "{{ [keys_path, key_name ~ '.key'] | path_join }}"
-      subject_alt_name: |
-          {{ domains | map('regex_replace', '^(.*)$', 'DNS:\1' ) | list }}
-      ocsp_must_staple: "{{ ocsp_must_staple }}"
-      use_common_name_for_san: no
-      force: yes
-    delegate_to: localhost
-    run_once: yes
+- name: "Creating CSR for domains {{ ', '.join(domains) }}"
+  openssl_csr:
+    path: "{{ [keys_path, key_name ~ '.csr'] | path_join }}"
+    privatekey_path: "{{ [keys_path, key_name ~ '.key'] | path_join }}"
+    subject_alt_name: |
+        {{ domains | map('regex_replace', '^(.*)$', 'DNS:\1' ) | list }}
+    ocsp_must_staple: "{{ ocsp_must_staple }}"
+    use_common_name_for_san: no
+    force: yes
+  delegate_to: localhost
+  run_once: yes
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
