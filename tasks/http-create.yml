@@ -24,7 +24,7 @@
     owner: "{{ acme_certificate_http_challenge_user }}"
     group: "{{ acme_certificate_http_challenge_group }}"
     mode: "{{ acme_certificate_http_challenge_file_mode }}"
-  with_dict: "{{ acme_certificate_acme_certificate_INTERNAL_challenge.challenge_data }}"
+  with_dict: "{{ acme_certificate_INTERNAL_challenge.challenge_data }}"
   become: "{{ acme_certificate_http_become }}"
   tags:
   - issue-tls-certs-newkey
