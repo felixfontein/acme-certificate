@@ -1,23 +1,25 @@
 ---
-- name: Ansible version check
-  assert:
-    that: "ansible_version.string is version('2.8.3', '>=')"
-    msg: "This version of the acme-certificate role must be used with Ansible 2.8.3 or later."
-  run_once: yes
-  tags:
-  - issue-tls-certs-newkey
-  - issue-tls-certs
+- set_fact:
+    acme_certificate_INTERNAL_force_regenerate_private_key: no
 
-- name: Sanity checks
-  assert:
-    that: "challenge != 'dns-01' or dns_provider is not undefined"
-    msg: "dns_provider must be defined for dns-01 DNS challenge"
-  run_once: yes
+- set_fact:
+    acme_certificate_INTERNAL_force_regenerate_private_key: yes
   tags:
   - issue-tls-certs-newkey
-  - issue-tls-certs
 
 - block:
+  - name: Ansible version check
+    assert:
+      that: "ansible_version.string is version('2.8.3', '>=')"
+      msg: "This version of the acme-certificate role must be used with Ansible 2.8.3 or later."
+    run_once: yes
+
+  - name: Sanity checks
+    assert:
+      that: "challenge != 'dns-01' or dns_provider is not undefined"
+      msg: "dns_provider must be defined for dns-01 DNS challenge"
+    run_once: yes
+
   - name: "Test whether old certificate files for domains {{ ', '.join(domains) }} exist"
     stat:
       path: "{{ [keys_path, key_name] | path_join }}.pem"
@@ -47,146 +49,125 @@
     - ".pem"
     when: "keys_old_store and old_certificate_exists.stat.exists"
     run_once: yes
-  tags:
-  - issue-tls-certs-newkey
-  - issue-tls-certs
-
-- set_fact:
-    force_regenerate_private_key: no
-  tags:
-  - issue-tls-certs-newkey
-  - issue-tls-certs
-
-- set_fact:
-    force_regenerate_private_key: yes
-  tags:
-  - issue-tls-certs-newkey
-
-- name: "Creating private key for domains {{ ', '.join(domains) }} (RSA)"
-  openssl_privatekey:
-    path: "{{ [keys_path, key_name ~ '.key'] | path_join }}"
-    mode: "{{ privatekey_mode }}"
-    type: "{{ 'RSA' if algorithm == 'rsa' else 'ECC' }}
-    size: "{{ key_length if algorithm == 'rsa' else omit }}"
-    curve: >-
-      {{ omit if algorithm == 'rsa' else
-         'secp256r1' if algorithm == 'p-256' else
-         'secp384r1' if algorithm == 'p-384' else
-         'secp521r1' if algorithm == 'p-521' else
-         'invalid value for algorithm!' }}
-    force: "{{ force_regenerate_private_key }}"
-  delegate_to: localhost
-  run_once: yes
-  tags:
-  - issue-tls-certs-newkey
-  - issue-tls-certs
-
-- name: "Creating CSR for domains {{ ', '.join(domains) }}"
-  openssl_csr:
-    path: "{{ [keys_path, key_name ~ '.csr'] | path_join }}"
-    privatekey_path: "{{ [keys_path, key_name ~ '.key'] | path_join }}"
-    subject_alt_name: |
-        {{ domains | map('regex_replace', '^(.*)$', 'DNS:\1' ) | list }}
-    ocsp_must_staple: "{{ ocsp_must_staple }}"
-    use_common_name_for_san: no
-    force: yes
-  delegate_to: localhost
-  run_once: yes
-  tags:
-  - issue-tls-certs-newkey
-  - issue-tls-certs
-
-- name: "Get root certificate for domains {{ ', '.join(domains) }}"
-  get_url:
-    url: "{{ root_certificate }}"
-    dest: "{{ [keys_path, key_name ~ '-root.pem'] | path_join }}"
-    force: yes
-    validate_certs: "{{ validate_certs }}"
-  delegate_to: localhost
-  run_once: yes
-  tags:
-  - issue-tls-certs-newkey
-  - issue-tls-certs
-
-- block:
-  - name: "Preparing challenges for domains {{ ', '.join(domains) }}"
-    acme_certificate:
-      account_key: "{{ acme_account }}"
-      modify_account: "{{ modify_account }}"
-      csr: "{{ [keys_path, key_name ~ '.csr'] | path_join }}"
-      dest: "{{ [keys_path, key_name ~ '.pem'] | path_join }}"
-      fullchain_dest: "{{ [keys_path, key_name ~ '-fullchain.pem'] | path_join }}"
-      chain_dest: "{{ [keys_path, key_name ~ '-chain.pem'] | path_join }}"
-      account_email: "{{ acme_email }}"
-      terms_agreed: "{{ terms_agreed }}"
-      challenge: "{{ challenge }}"
-      acme_directory: "{{ acme_directory }}"
-      acme_version: "{{ acme_version }}"
-      force: yes
-      validate_certs: "{{ validate_certs }}"
-    delegate_to: localhost
-    run_once: yes
-    register: lets_encrypt_challenge
-
-  always:
-  - debug:
-      msg: "account URI: {{ lets_encrypt_challenge.get('account_uri') }}; order URI: {{ lets_encrypt_challenge.get('order_uri') }}"
-    run_once: yes
 
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
 
 - block:
-  # Set up HTTP challenges
-  - include_tasks: http-create.yml
-    when: "challenge == 'http-01'"
+  - name: "Creating private key for domains {{ ', '.join(domains) }} (RSA)"
+    openssl_privatekey:
+      path: "{{ [keys_path, key_name ~ '.key'] | path_join }}"
+      mode: "{{ privatekey_mode }}"
+      type: "{{ 'RSA' if algorithm == 'rsa' else 'ECC' }}
+      size: "{{ key_length if algorithm == 'rsa' else omit }}"
+      curve: >-
+        {{ omit if algorithm == 'rsa' else
+           'secp256r1' if algorithm == 'p-256' else
+           'secp384r1' if algorithm == 'p-384' else
+           'secp521r1' if algorithm == 'p-521' else
+           'invalid value for algorithm!' }}
+      force: "{{ acme_certificate_INTERNAL_force_regenerate_private_key }}"
+    delegate_to: localhost
+    run_once: yes
 
-  # Set up DNS challenges
-  - include_tasks: dns-{{ dns_provider }}-create.yml
-    when: "challenge == 'dns-01'"
-
-  - name: "Getting certificates for domains {{ ', '.join(domains) }}"
-    acme_certificate:
-      account_key: "{{ acme_account }}"
-      modify_account: "{{ modify_account }}"
-      csr: "{{ [keys_path, key_name ~ '.csr'] | path_join }}"
-      dest: "{{ [keys_path, key_name ~ '.pem'] | path_join }}"
-      fullchain_dest: "{{ [keys_path, key_name ~ '-fullchain.pem'] | path_join }}"
-      chain_dest: "{{ [keys_path, key_name ~ '-chain.pem'] | path_join }}"
-      account_email: "{{ acme_email }}"
-      terms_agreed: "{{ terms_agreed }}"
-      challenge: "{{ challenge }}"
-      acme_directory: "{{ acme_directory }}"
-      acme_version: "{{ acme_version }}"
+  - name: "Creating CSR for domains {{ ', '.join(domains) }}"
+    openssl_csr:
+      path: "{{ [keys_path, key_name ~ '.csr'] | path_join }}"
+      privatekey_path: "{{ [keys_path, key_name ~ '.key'] | path_join }}"
+      subject_alt_name: |
+          {{ domains | map('regex_replace', '^(.*)$', 'DNS:\1' ) | list }}
+      ocsp_must_staple: "{{ ocsp_must_staple }}"
+      use_common_name_for_san: no
       force: yes
-      data: "{{ lets_encrypt_challenge }}"
-      deactivate_authzs: "{{ deactivate_authzs }}"
+    delegate_to: localhost
+    run_once: yes
+
+  - name: "Get root certificate for domains {{ ', '.join(domains) }}"
+    get_url:
+      url: "{{ root_certificate }}"
+      dest: "{{ [keys_path, key_name ~ '-root.pem'] | path_join }}"
+      force: yes
       validate_certs: "{{ validate_certs }}"
     delegate_to: localhost
     run_once: yes
 
-  - name: "Form root chain for domains {{ ', '.join(domains) }}"
-    copy:
-      dest: "{{ [keys_path, key_name ~ '-rootchain.pem'] | path_join }}"
-      content: |
-        {{ lookup('file', [keys_path, key_name ~ '-root.pem'] | path_join) }}
-        {{ lookup('file', [keys_path, key_name ~ '-chain.pem'] | path_join) }}
-    delegate_to: localhost
-    run_once: yes
-  always:
-  # Clean up HTTP challenges
-  - include_tasks: http-cleanup.yml
-    when: "challenge == 'http-01'"
+  - block:
+    - name: "Preparing challenges for domains {{ ', '.join(domains) }}"
+      acme_certificate:
+        account_key: "{{ acme_account }}"
+        modify_account: "{{ modify_account }}"
+        csr: "{{ [keys_path, key_name ~ '.csr'] | path_join }}"
+        dest: "{{ [keys_path, key_name ~ '.pem'] | path_join }}"
+        fullchain_dest: "{{ [keys_path, key_name ~ '-fullchain.pem'] | path_join }}"
+        chain_dest: "{{ [keys_path, key_name ~ '-chain.pem'] | path_join }}"
+        account_email: "{{ acme_email }}"
+        terms_agreed: "{{ terms_agreed }}"
+        challenge: "{{ challenge }}"
+        acme_directory: "{{ acme_directory }}"
+        acme_version: "{{ acme_version }}"
+        force: yes
+        validate_certs: "{{ validate_certs }}"
+      delegate_to: localhost
+      run_once: yes
+      register: lets_encrypt_challenge
 
-  # Clean up DNS challenges
-  - include_tasks: dns-{{ dns_provider }}-cleanup.yml
-    when: "challenge == 'dns-01'"
+    always:
+    - debug:
+        msg: "account URI: {{ lets_encrypt_challenge.get('account_uri') }}; order URI: {{ lets_encrypt_challenge.get('order_uri') }}"
+      run_once: yes
+
+  - block:
+    # Set up HTTP challenges
+    - include_tasks: http-create.yml
+      when: "challenge == 'http-01'"
+
+    # Set up DNS challenges
+    - include_tasks: dns-{{ dns_provider }}-create.yml
+      when: "challenge == 'dns-01'"
+
+    - name: "Getting certificates for domains {{ ', '.join(domains) }}"
+      acme_certificate:
+        account_key: "{{ acme_account }}"
+        modify_account: "{{ modify_account }}"
+        csr: "{{ [keys_path, key_name ~ '.csr'] | path_join }}"
+        dest: "{{ [keys_path, key_name ~ '.pem'] | path_join }}"
+        fullchain_dest: "{{ [keys_path, key_name ~ '-fullchain.pem'] | path_join }}"
+        chain_dest: "{{ [keys_path, key_name ~ '-chain.pem'] | path_join }}"
+        account_email: "{{ acme_email }}"
+        terms_agreed: "{{ terms_agreed }}"
+        challenge: "{{ challenge }}"
+        acme_directory: "{{ acme_directory }}"
+        acme_version: "{{ acme_version }}"
+        force: yes
+        data: "{{ lets_encrypt_challenge }}"
+        deactivate_authzs: "{{ deactivate_authzs }}"
+        validate_certs: "{{ validate_certs }}"
+      delegate_to: localhost
+      run_once: yes
+
+    - name: "Form root chain for domains {{ ', '.join(domains) }}"
+      copy:
+        dest: "{{ [keys_path, key_name ~ '-rootchain.pem'] | path_join }}"
+        content: |
+          {{ lookup('file', [keys_path, key_name ~ '-root.pem'] | path_join) }}
+          {{ lookup('file', [keys_path, key_name ~ '-chain.pem'] | path_join) }}
+      delegate_to: localhost
+      run_once: yes
+    always:
+    # Clean up HTTP challenges
+    - include_tasks: http-cleanup.yml
+      when: "challenge == 'http-01'"
+
+    # Clean up DNS challenges
+    - include_tasks: dns-{{ dns_provider }}-cleanup.yml
+      when: "challenge == 'dns-01'"
+
+    when: lets_encrypt_challenge is changed
 
   tags:
   - issue-tls-certs-newkey
   - issue-tls-certs
-  when: lets_encrypt_challenge is changed
 
 - name: "Verifying certificate for domains {{ ', '.join(domains) }}"
   command: >-
