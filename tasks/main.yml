@@ -125,7 +125,7 @@
       when: "acme_certificate_challenge == 'http-01'"
 
     # Set up DNS challenges
-    - include_tasks: dns-{{ dns_provider }}-create.yml
+    - include_tasks: dns-{{ acme_certificate_dns_provider }}-create.yml
       when: "acme_certificate_challenge == 'dns-01'"
 
     - name: "Getting certificates for domains {{ ', '.join(acme_certificate_domains) }}"
