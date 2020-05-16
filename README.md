@@ -140,10 +140,9 @@ With this config, if `/var/www/challenges/` is empty, your HTTP server will beha
 
 If DNS challenges are used, the following variables define how the challenges can be fulfilled:
 
-- `dns_provider`: must be one of `route53`, `hosttech`, `gcdns` or `ns1`. Each needs more information:
+- `dns_provider`: must be one of `route53`, `hosttech`, and `ns1`. Each needs more information:
   - For `route53` (Amazon Route 53), the credentials must be passed as `aws_access_key` and `aws_secret_key`.
   - For `hosttech` (hosttech GmbH, requires external [hosttech_dns_record module](https://github.com/felixfontein/ansible-hosttech)).
-  - For `gcdns` (Google Cloud DNS), the files `tasks/dns-gcdns-*.yml` need to be adjusted to add required credentials. See the documentation of the [gcdns_record module](https://docs.ansible.com/ansible/latest/gcdns_record_module.html).
   - For `ns1` ([ns1.com](https://ns1.com)) the key for your API account must be passed as `ns1_secret_key`. Also it depends on external module `ns1_record`. Assuming default directory structure and settings, you may need download 2 files into machine where playbook executed:
 
   ```bash
