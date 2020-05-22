@@ -1,5 +1,9 @@
 # Changelog for acme_certificate
 
+## Version 2.0.0 (2020-xx-yy)
+
+- Use collections `community.crypto` and `felixfontein.hosttech_dns`.
+
 ## Version 1.1.1 (2020-05-22)
 
 - Linting, to make Galaxy more happy. (ansible-lint does not like missing modules. This might get better with collections.)

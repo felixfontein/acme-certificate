@@ -161,8 +161,8 @@ With this config, if `/var/www/challenges/` is empty, your HTTP server will beha
 If DNS challenges are used, the following variables define how the challenges can be fulfilled:
 
 - `acme_certificate_dns_provider`: must be one of `route53`, `hosttech`, and `ns1`. Each needs more information:
-  - For `route53` (Amazon Route 53), the credentials must be passed as `acme_certificate_aws_access_key` and `acme_certificate_aws_secret_key`.
-  - For `hosttech` (hosttech GmbH, requires external [hosttech_dns_record module](https://github.com/felixfontein/ansible-hosttech)).
+  - For `route53` ([Amazon Route 53](https://aws.amazon.com/route53/)), the [`community.aws` collection](https://galaxy.ansible.com/community/aws) needs to be installed, and the credentials must be passed as `acme_certificate_aws_access_key` and `acme_certificate_aws_secret_key`.
+  - For `hosttech` ([hosttech GmbH](https://www.hosttech.ch/)), the [`felixfontein.hosttech_dns` collection](https://galaxy.ansible.com/felixfontein/hosttech_dns) needs to be installed, and credentials have to be passed as `acme_certificate_hosttech_username` and `acme_certificate_hosttech_password`.
   - For `ns1` ([ns1.com](https://ns1.com)) the key for your API account must be passed as `acme_certificate_ns1_secret_key`. Also it depends on external module `ns1_record`. Assuming default directory structure and settings, you may need download 2 files into machine where playbook executed:
 
   ```bash

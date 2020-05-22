@@ -58,7 +58,7 @@
 
 - block:
   - name: "Creating private key for domains {{ ', '.join(acme_certificate_domains) }} (RSA)"
-    openssl_privatekey:
+    community.crypto.openssl_privatekey:
       path: "{{ [acme_certificate_keys_path, acme_certificate_key_name ~ '.key'] | path_join }}"
       mode: "{{ acme_certificate_privatekey_mode }}"
       type: "{{ 'RSA' if acme_certificate_algorithm == 'rsa' else 'ECC' }}"
@@ -74,7 +74,7 @@
     run_once: yes
 
   - name: "Creating CSR for domains {{ ', '.join(acme_certificate_domains) }}"
-    openssl_csr:
+    community.crypto.openssl_csr:
       path: "{{ [acme_certificate_keys_path, acme_certificate_key_name ~ '.csr'] | path_join }}"
       privatekey_path: "{{ [acme_certificate_keys_path, acme_certificate_key_name ~ '.key'] | path_join }}"
       subject_alt_name: |
@@ -96,7 +96,7 @@
 
   - block:
     - name: "Preparing challenges for domains {{ ', '.join(acme_certificate_domains) }}"
-      acme_certificate:
+      community.crypto.acme_certificate:
         account_key: "{{ acme_certificate_acme_account }}"
         modify_account: "{{ acme_certificate_modify_account }}"
         csr: "{{ [acme_certificate_keys_path, acme_certificate_key_name ~ '.csr'] | path_join }}"
@@ -131,7 +131,7 @@
       when: "acme_certificate_challenge == 'dns-01'"
 
     - name: "Getting certificates for domains {{ ', '.join(acme_certificate_domains) }}"
-      acme_certificate:
+      community.crypto.acme_certificate:
         account_key: "{{ acme_certificate_acme_account }}"
         modify_account: "{{ acme_certificate_modify_account }}"
         csr: "{{ [acme_certificate_keys_path, acme_certificate_key_name ~ '.csr'] | path_join }}"

@@ -1,7 +1,7 @@
 ---
 # Create DNS challenges for DNS provider Amazon Route53
 - name: Creating challenge DNS entries for domains {{ ', '.join(acme_certificate_domains) }} via Route53
-  route53:
+  community.aws.route53:
     state: present
     zone: "{{ item.key | regex_replace('^(?:.*\\.|)([^.]+\\.[^.]+)$', '\\1') }}"
     record: "{{ item.key }}"
