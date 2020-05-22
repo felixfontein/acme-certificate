@@ -2,6 +2,7 @@
 
 ## Version 2.0.0 (2020-xx-yy)
 
+- Drop non-namespaced role parameters.
 - Use collections `community.crypto` and `felixfontein.hosttech_dns`.
 
 ## Version 1.1.1 (2020-05-22)
