@@ -2,26 +2,26 @@
 - name: getting certificates for webserver
   hosts: webserver
   vars:
-    acme_account: 'keys/acme-account.key'
-    acme_email: 'mail@example.com'
+    acme_certificate_acme_account: 'keys/acme-account.key'
+    acme_certificate_acme_email: 'mail@example.com'
     # For HTTP challenges:
-    server_location: '/var/www/challenges/'
-    http_challenge_user: root
-    http_challenge_group: http
-    http_challenge_folder_mode: "0750"
-    http_challenge_file_mode: "0640"
+    acme_certificate_server_location: '/var/www/challenges/'
+    acme_certificate_http_challenge_user: root
+    acme_certificate_http_challenge_group: http
+    acme_certificate_http_challenge_folder_mode: "0750"
+    acme_certificate_http_challenge_file_mode: "0640"
     # For DNS challenges with route53:
-    dns_provider: route53
-    aws_access_key: REPLACE_WITH_YOUR_ACCESS_KEY
-    aws_secret_key: REPLACE_WITH_YOUR_SECRET_KEY
+    acme_certificate_dns_provider: route53
+    acme_certificate_aws_access_key: REPLACE_WITH_YOUR_ACCESS_KEY
+    acme_certificate_aws_secret_key: REPLACE_WITH_YOUR_SECRET_KEY
     # For DNS challenges with ns1:
-    dns_provider: ns1
-    ns1_secret_key: REPLACE_WITH_YOUR_SECRET_KEY
+    # acme_certificate_dns_provider: ns1
+    # acme_certificate_ns1_secret_key: REPLACE_WITH_YOUR_SECRET_KEY
   roles:
     - role: acme-certificate
-      domains: ['example.com', 'www.example.com']
+      acme_certificate_domains: ['example.com', 'www.example.com']
       # Use DNS challenges:
-      challenge: dns-01
+      acme_certificate_challenge: dns-01
       # The certificate files will be stored at:
       #    keys/example.com.key  (private key)
       #    keys/example.com.csr  (certificate signing request)
@@ -32,11 +32,11 @@
       #    keys/example.com-root.pem  (root certificate)
       #    keys/example.com-rootchain.pem  (intermediate certificate with root certificate)
     - role: acme-certificate
-      domains: ['another.example.com']
-      key_name: 'another.example.com-rsa'
-      key_length: 4096
+      acme_certificate_domains: ['another.example.com']
+      acme_certificate_key_name: 'another.example.com-rsa'
+      acme_certificate_key_length: 4096
       # Use HTTP challenges:
-      challenge: http-01
+      acme_certificate_challenge: http-01
       # The certificate files will be stored at:
       #    keys/another.example.com-rsa.key  (private key)
       #    keys/another.example.com-rsa.csr  (certificate signing request)
@@ -47,9 +47,9 @@
       #    keys/another.example.com-rsa-root.pem  (root certificate)
       #    keys/another.example.com-rsa-rootchain.pem  (intermediate certificate with root certificate)
     - role: acme-certificate
-      domains: ['another.example.com']
-      key_name: 'another.example.com-ecc'
-      algorithm: 'p-256'
+      acme_certificate_domains: ['another.example.com']
+      acme_certificate_key_name: 'another.example.com-ecc'
+      acme_certificate_algorithm: 'p-256'
       # Use HTTP challenges (default for challenge is http-01).
       # The certificate files will be stored at:
       #    keys/another.example.com-ecc.key  (private key)

@@ -1,35 +1,47 @@
 ---
-algorithm: "rsa"
-key_length: 4096
-key_name: "{{ domains[0].replace('*', '_') }}"
-keys_path: "keys/"
-keys_old_path: "keys/old/"
-keys_old_store: no
-keys_old_prepend_timestamp: no
-ocsp_must_staple: no
-terms_agreed: yes
-acme_directory: https://acme-v02.api.letsencrypt.org/directory
-acme_version: 2
+acme_certificate_domains: '{{ domains }}'
+acme_certificate_dns_provider: '{{ dns_provider }}'
+acme_certificate_acme_account: '{{ acme_account }}'
+acme_certificate_acme_email: '{{ acme_email }}'
+
+acme_certificate_algorithm: '{{ algorithm | default("rsa") }}'
+acme_certificate_key_length: '{{ key_length | default(4096) }}'
+acme_certificate_key_name: "{{ key_name | default(acme_certificate_domains[0].replace('*', '_')) }}"
+acme_certificate_keys_path: '{{ keys_path | default("keys/") }}'
+acme_certificate_keys_old_path: '{{ keys_old_path | default("keys/old/") }}'
+acme_certificate_keys_old_store: '{{ keys_old_store | default(false) }}'
+acme_certificate_keys_old_prepend_timestamp: '{{ keys_old_prepend_timestamp | default(false) }}'
+acme_certificate_ocsp_must_staple: '{{ ocsp_must_staple | default(false) }}'
+acme_certificate_terms_agreed: '{{ terms_agreed | default(true) }}'
+acme_certificate_acme_directory: '{{ acme_directory | default("https://acme-v02.api.letsencrypt.org/directory") }}'
+acme_certificate_acme_version: '{{ acme_version | default(2) }}'
 # For ACME v1:
-#   acme_directory: https://acme-v01.api.letsencrypt.org/directory
-#   acme_version: 1
+#   acme_certificate_acme_directory: https://acme-v01.api.letsencrypt.org/directory
+#   acme_certificate_acme_version: 1
 # For staging, use:
-#   acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory  (ACME v2)
-#   acme_directory: https://acme-staging.api.letsencrypt.org/directory  (ACME v1)
-challenge: http-01
-root_certificate: https://letsencrypt.org/certs/isrgrootx1.pem
+#   acme_certificate_acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory  (ACME v2)
+#   acme_certificate_acme_directory: https://acme-staging.api.letsencrypt.org/directory  (ACME v1)
+acme_certificate_challenge: '{{ challenge | default("http-01") }}'
+acme_certificate_root_certificate: '{{ root_certificate | default("https://letsencrypt.org/certs/isrgrootx1.pem") }}'
 # For staging, use:
 #   root_certificate: https://letsencrypt.org/certs/fakelerootx1.pem
-deactivate_authzs: yes
-modify_account: yes
-validate_certs: yes
-verify_certs: yes
-privatekey_mode: "0600"
+acme_certificate_deactivate_authzs: '{{ deactivate_authzs | default(true) }}'
+acme_certificate_modify_account: '{{ modify_account | default(true) }}'
+acme_certificate_validate_certs: '{{ validate_certs | default(true) }}'
+acme_certificate_verify_certs: '{{ verify_certs | default(true) }}'
+acme_certificate_privatekey_mode: '{{ privatekey_mode | default("0600") }}'
 
 # For HTTP challenges:
-server_location: /var/www/challenges
-http_become: no
-http_challenge_user: root
-http_challenge_group: http
-http_challenge_folder_mode: "0750"
-http_challenge_file_mode: "0640"
+acme_certificate_server_location: '{{ server_location | default("/var/www/challenges") }}'
+acme_certificate_http_become: '{{ http_become | default(false) }}'
+acme_certificate_http_challenge_user: '{{ http_challenge_user | default("root") }}'
+acme_certificate_http_challenge_group: '{{ http_challenge_group | default("http") }}'
+acme_certificate_http_challenge_folder_mode: '{{ http_challenge_folder_mode | default("0750") }}'
+acme_certificate_http_challenge_file_mode: '{{ http_challenge_file_mode | default("0640") }}'
+
+# DNS challenge credentials
+acme_certificate_hosttech_username: '{{ hosttech_username | default(omit) }}'
+acme_certificate_hosttech_password: '{{ hosttech_password | default(omit) }}'
+acme_certificate_ns1_secret_key: '{{ ns1_secret_key | default(omit) }}'
+acme_certificate_aws_access_key: '{{ aws_access_key | default(omit) }}'
+acme_certificate_aws_secret_key: '{{ aws_secret_key | default(omit) }}'
