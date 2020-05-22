@@ -10,12 +10,8 @@ acme_certificate_ocsp_must_staple: false
 acme_certificate_terms_agreed: true
 acme_certificate_acme_directory: https://acme-v02.api.letsencrypt.org/directory
 acme_certificate_acme_version: 2
-# For ACME v1:
-#   acme_certificate_acme_directory: https://acme-v01.api.letsencrypt.org/directory
-#   acme_certificate_acme_version: 1
 # For staging, use:
 #   acme_certificate_acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory  (ACME v2)
-#   acme_certificate_acme_directory: https://acme-staging.api.letsencrypt.org/directory  (ACME v1)
 acme_certificate_challenge: http-01
 acme_certificate_root_certificate: https://letsencrypt.org/certs/isrgrootx1.pem
 # For staging, use:

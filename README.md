@@ -73,7 +73,7 @@ These are the main variables:
 - `acme_certificate_ocsp_must_staple`: Whether a certificate with the OCSP Must Staple extension is requested. Default value is `false`.
 - `acme_certificate_agreement`: The terms of service document the user agrees to. Default value is `https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf`.
 - `acme_certificate_acme_directory`: The ACME directory to use. Default is `https://acme-v02.api.letsencrypt.org/directory`, which is the current production ACME v2 endpoint of Let's Encrypt.
-- `acme_certificate_acme_version`: The ACME directory's version. Default is 2. Use 1 for ACME v1.
+- `acme_certificate_acme_version`: The ACME directory's version. Default is 2.
 - `acme_certificate_challenge`: The challenge type to use. Should be `http-01` for HTTP challenges (needs access to web server) or `dns-01` for DNS challenges (needs access to DNS provider).
 - `acme_certificate_root_certificate`: The root certificate for the ACME directory. Default value is `https://letsencrypt.org/certs/isrgrootx1.pem` for the root certificate of Let's Encrypt.
 - `acme_certificate_deactivate_authzs`: Whether `authz`s (authorizations) should be deactivated afterwards. Default value is `true`. Set to `false` to be able to re-use `authz`s.
