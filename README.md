@@ -1,4 +1,4 @@
-# acme_certificate 1.1.0
+# acme_certificate 1.1.1
 
 Allows to obtain certificates from Let's Encrypt with minimal interaction with the webserver. Most code is executed on the controller, and the account key is never send to the nodes.
 
