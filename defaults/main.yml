@@ -6,7 +6,7 @@ acme_certificate_acme_email: '{{ acme_email }}'
 
 acme_certificate_algorithm: '{{ algorithm | default("rsa") }}'
 acme_certificate_key_length: '{{ key_length | default(4096) }}'
-acme_certificate_key_name: "{{ acme_certificate_domains[0].replace('*', '_') }}"
+acme_certificate_key_name: "{{ key_name | default(acme_certificate_domains[0].replace('*', '_')) }}"
 acme_certificate_keys_path: '{{ keys_path | default("keys/") }}'
 acme_certificate_keys_old_path: '{{ keys_old_path | default("keys/old/") }}'
 acme_certificate_keys_old_store: '{{ keys_old_store | default(false) }}'
