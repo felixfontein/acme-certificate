@@ -1,8 +1,7 @@
 ---
 # Create DNS challenges for DNS provider HostTech
 - name: Creating challenge DNS entries for domains {{ ', '.join(acme_certificate_domains) }} via HostTech API
-  local_action:
-    module: hosttech_dns_record
+  hosttech_dns_record:
     state: present
     zone: "{{ item.key | regex_replace('^(?:.*\\.|)([^.]+\\.[^.]+)$', '\\1') }}"
     record: "{{ item.key }}"
@@ -12,6 +11,7 @@
     overwrite: true
     hosttech_username: "{{ acme_certificate_hosttech_username }}"
     hosttech_password: "{{ acme_certificate_hosttech_password }}"
+  delegate_to: localhost
   run_once: true
   with_dict: "{{ acme_certificate_INTERNAL_challenge.challenge_data_dns }}"
   tags:

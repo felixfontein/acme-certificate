@@ -1,8 +1,10 @@
 ---
-- set_fact:
+- name: Determine whether to force private key regeneration (1/2)
+  set_fact:
     acme_certificate_INTERNAL_force_regenerate_private_key: no
 
-- set_fact:
+- name: Determine whether to force private key regeneration (2/2)
+  set_fact:
     acme_certificate_INTERNAL_force_regenerate_private_key: yes
   tags:
   - issue-tls-certs-newkey

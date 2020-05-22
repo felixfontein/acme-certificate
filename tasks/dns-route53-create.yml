@@ -1,8 +1,7 @@
 ---
 # Create DNS challenges for DNS provider Amazon Route53
 - name: Creating challenge DNS entries for domains {{ ', '.join(acme_certificate_domains) }} via Route53
-  local_action:
-    module: route53
+  route53:
     state: present
     zone: "{{ item.key | regex_replace('^(?:.*\\.|)([^.]+\\.[^.]+)$', '\\1') }}"
     record: "{{ item.key }}"
@@ -13,6 +12,7 @@
     aws_access_key: "{{ acme_certificate_aws_access_key }}"
     aws_secret_key: "{{ acme_certificate_aws_secret_key }}"
     wait: true
+  delegate_to: localhost
   run_once: true
   with_dict: "{{ acme_certificate_INTERNAL_challenge.challenge_data_dns }}"
   tags:

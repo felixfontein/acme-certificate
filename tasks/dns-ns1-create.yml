@@ -1,7 +1,6 @@
 ---
 - name: Creating challenge DNS entries for domains {{ ', '.join(acme_certificate_domains) }} via NS1 DNS
-  local_action:
-    module: ns1_record
+  ns1_record:
     apiKey: "{{ acme_certificate_ns1_secret_key }}"
     name: "{{ item.key }}"
     zone: "{{ item.key | regex_replace('^(?:.*\\.|)([^.]+\\.[^.]+)$', '\\1') }}"
@@ -12,6 +11,7 @@
           - "{{ item.value[0] }}"
         meta:
           up: true
+  delegate_to: localhost
   when: "'_acme-challenge' in item.key"
   run_once: true
   with_dict: "{{ acme_certificate_INTERNAL_challenge.challenge_data_dns }}"
