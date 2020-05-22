@@ -103,7 +103,7 @@ Assume that for one of your TLS/SSL protected domains, you use a HTTP-to-HTTPS r
         return 301   https://www.example.com$request_uri;
     }
 
-To allow the `acme-certificate` role to put something at `http://*.example.com/.well-known/acme-challenge/`, you can change this to:
+To allow the `acme_certificate` role to put something at `http://*.example.com/.well-known/acme-challenge/`, you can change this to:
 
     server {
         listen       example.com:80;
@@ -288,7 +288,7 @@ This role can be used as follows. Note that it obtains several certificates, and
         # acme_certificate_dns_provider: ns1
         # acme_certificate_ns1_secret_key: REPLACE_WITH_YOUR_SECRET_KEY
       roles:
-        - role: acme-certificate
+        - role: acme_certificate
           acme_certificate_domains: ['example.com', 'www.example.com']
           # Use DNS challenges:
           acme_certificate_challenge: dns-01
@@ -301,7 +301,7 @@ This role can be used as follows. Note that it obtains several certificates, and
           #    keys/example.com-fullchain.pem  (certificate with intermediate certificate)
           #    keys/example.com-root.pem  (root certificate)
           #    keys/example.com-rootchain.pem  (intermediate certificate with root certificate)
-        - role: acme-certificate
+        - role: acme_certificate
           acme_certificate_domains: ['another.example.com']
           acme_certificate_key_name: 'another.example.com-rsa'
           acme_certificate_key_length: 4096
@@ -316,7 +316,7 @@ This role can be used as follows. Note that it obtains several certificates, and
           #    keys/another.example.com-rsa-fullchain.pem  (certificate with intermediate certificate)
           #    keys/another.example.com-rsa-root.pem  (root certificate)
           #    keys/another.example.com-rsa-rootchain.pem  (intermediate certificate with root certificate)
-        - role: acme-certificate
+        - role: acme_certificate
           acme_certificate_domains: ['another.example.com']
           acme_certificate_key_name: 'another.example.com-ecc'
           acme_certificate_algorithm: 'p-256'
