@@ -147,6 +147,7 @@
         data: "{{ acme_certificate_INTERNAL_challenge }}"
         deactivate_authzs: "{{ acme_certificate_deactivate_authzs }}"
         validate_certs: "{{ acme_certificate_validate_certs }}"
+        select_chain: "{{ acme_certificate_select_chain | default(omit) }}"
       delegate_to: localhost
       run_once: yes
 
