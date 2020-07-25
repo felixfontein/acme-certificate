@@ -79,6 +79,24 @@ These are the main variables:
 - `acme_certificate_deactivate_authzs`: Whether `authz`s (authorizations) should be deactivated afterwards. Default value is `true`. Set to `false` to be able to re-use `authz`s.
 - `acme_certificate_modify_account`: Whether the ACME account should be created (if it doesn't exist) and the contact data (email address) should be updated. Default value is `true`. Set to `false` if you want to use the `acme_account` module to manage your ACME account (not done by this role).
 - `acme_certificate_privatekey_mode`: Which file mode to use for the private key file. Default value is `"0600"`, which means read- and writeable by the owner, but not accessible by anyone else (except possibly `root`).
+- `acme_certificate_select_chain`: (Only usable with Ansible 2.10+) Must be in the format described [here](https://docs.ansible.com/ansible/2.10/collections/community/crypto/acme_certificate_module.html#parameter-select_chain). Allows to select the certificate chain to be used; `acme_certificate_root_certificate` must be used in conjunction. This can be used for example with [Let's Encrypt](https://community.letsencrypt.org/t/transition-to-isrgs-root-delayed-until-sep-29/125516) to select which root certificate to use. The following configuration makes sure that the IdenTrust cross-signed intermediate is used, which is more compatible for example for older Android versions than the new IRSG root:
+  ```.yaml
+  acme_certificate_root_certificate: https://letsencrypt.org/certs/trustid-x3-root.pem.txt
+  acme_certificate_select_chain:
+    - test_certificates: last
+      issuer:
+        CN: DST Root CA X3
+        O: Digital Signature Trust Co.
+  ```
+  The following configuration selects the new IRSG X1 root:
+  ```.yaml
+  acme_certificate_root_certificate: https://letsencrypt.org/certs/isrgrootx1.pem
+  acme_certificate_select_chain:
+    - test_certificates: last
+      issuer:
+        CN: ISRG Root X1
+        O: Internet Security Research Group
+  ```
 
 ### HTTP Challenges
 
