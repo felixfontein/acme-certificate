@@ -143,7 +143,7 @@ You can even improve on this by redirecting all URLs in `*.example.com/.well-kno
         listen       example.com:80;
         server_name  example.com *.example.com;
         location /.well-known/acme-challenge/ {
-            alias /var/www/lechallenges/;
+            alias /var/www/challenges/;
             try_files $uri @forward_https;
         }
         location @forward_https {
