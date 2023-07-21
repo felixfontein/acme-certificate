@@ -3,11 +3,10 @@ galaxy_info:
   role_name: acme_certificate
   author: Felix Fontein
   description: >
+    **DEPRECATED! Use the felixfontein.acme collection instead!**
     Wrapper of Ansible's included acme_certificate module, whose aim is that almost no code
     is executed on the webserver. Requires the Python cryptography library as well as the
     OpenSSL binary installed locally and available on executable path.
-
-    **DEPRECATED! Use the felixfontein.acme collection instead!**
 
   license: MIT
 
