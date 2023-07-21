@@ -1,5 +1,9 @@
 # Changelog for acme_certificate
 
+## Version 1.1.2 (2023-07-21)
+
+- Add deprecation marker.
+
 ## Version 1.1.1 (2020-05-22)
 
 - Linting, to make Galaxy more happy. (ansible-lint does not like missing modules. This might get better with collections.)
