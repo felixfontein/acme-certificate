@@ -1,5 +1,7 @@
 # acme_certificate 1.1.1
 
+**THIS ROLE IS DEPRECATED! PLEASE USE THE [COLLECTION VERSION felixfontein.acme](https://galaxy.ansible.com/felixfontein/acme) (https://github.com/felixfontein/ansible-acme/) INSTEAD!**
+
 Allows to obtain certificates from Let's Encrypt with minimal interaction with the webserver. Most code is executed on the controller, and the account key is never send to the nodes.
 
 The role can be installed via [Ansible Galaxy](https://galaxy.ansible.com/felixfontein/acme_certificate):
