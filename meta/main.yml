@@ -7,6 +7,8 @@ galaxy_info:
     is executed on the webserver. Requires the Python cryptography library as well as the
     OpenSSL binary installed locally and available on executable path.
 
+    **DEPRECATED! Use the felixfontein.acme collection instead!**
+
   license: MIT
 
   min_ansible_version: 2.8.3
